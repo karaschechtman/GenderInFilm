@@ -7,7 +7,7 @@ class Movie(object):
     """
     def __init__(self, imdb, title, year,
                  genre, director, rating, bechdel_score,
-                 script):
+                 data):
         self.imdb = imdb
         self.title = title
         self.year = year

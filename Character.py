@@ -7,3 +7,5 @@ class Character(object):
     associating lines to each character.
     """
     def __init__(self, character_name, lines):
+        self.character_name = character_name
+        self.lines = lines
