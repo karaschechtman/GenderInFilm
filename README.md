@@ -11,10 +11,10 @@ Data is stored in the data/ folder and contains both metadata about the movie an
 
 - IMBD: <imdb id, str>
 - Title: <title, str>
-- Year: <year, str>
+- Year: <year, int>
 - Genre: <genres, list of str>
 - Director <director name, str>
-- Rating: <rating between 0 and 10, float>
+- Rating: <rating between 0 and 10 (inclusive), float>
 - Bechdel Score: <score, int>
 
 # Authors
