@@ -1,13 +1,15 @@
 __author__ = "Kara Schechtman <kws2121@columbia.edu>"
 __date__ = "Jan 15, 2019"
 
+
 class Movie(object):
     """
     Stores data and metadata about a particular movie.
     """
     def __init__(self, imdb, title, year,
                  genre, director, rating, bechdel_score,
-                 data):
+                 imdb_cast, script):
+        # Set metadata.
         self.imdb = imdb
         self.title = title
         self.year = year
@@ -15,4 +17,4 @@ class Movie(object):
         self.director = director
         self.rating = rating
         self.bechdel_score = bechdel_score
-        self.characters = []
+        self.imdb_cast = imdb_cast
