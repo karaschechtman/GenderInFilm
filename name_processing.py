@@ -1,13 +1,13 @@
 import os
 
-# A variant is a variant on a character name.
+# Transforms a variant of a character name to its root.
 def variant_to_root(var):
     var = var.lower()
-    var = var.split(' (', 1)[0]  # e.g. shannon (quietly) --> shannon
+    var = var.split(' (', 1)[0]  # e.g. lou (quietly) --> lou
     var = var.strip(':')  # carol: --> carol
 
     # handle voice-overs
-    if '\'s voice' in var:  # e.g. morrison's voice --> morrison
+    if '\'s voice' in var:  # e.g. cate's voice --> cate
         var = var.split('\'s', 1)[0]
     elif 's\' voice' in var:  # e.g. chris' voice --> chris
         var = var.split('\'', 1)[0]
@@ -23,6 +23,10 @@ def get_imdb_char_names(cast):
         char_names.add(char_name.lower())
     return char_names
 
+# need to improve this method
+def aligned(iname, sname):
+    return sname in iname
+
 def test_char_name_alignment(lines):
     cast = lines[7]
     i_char_names = get_imdb_char_names(cast)
@@ -32,7 +36,7 @@ def test_char_name_alignment(lines):
         if line.startswith('C|'):
             var = line.strip('C|').strip().lower()
             root = variant_to_root(var)
-            if any(root in icn for icn in i_char_names):
+            if any(aligned(icn, root) for icn in i_char_names):
                 matched += 1
             else:
                 missed += 1
@@ -52,6 +56,7 @@ def test_all_char_name_alignment():
                 total_missed += missed
     total_lines = total_matched + total_missed
     print('Total Matched: {} / {}. Total Missed: {} / {}'.format(total_matched, round(total_matched/total_lines, 4), total_missed,
+
                                                                     round(total_missed/total_lines, 4)))
 if __name__ == "__main__":
     test_all_char_name_alignment()
