@@ -2,9 +2,9 @@
 Simple Python interface for analyzing data about gender in film. Data from Agarwal et. al (2015) and the Internet Movie Database (IMDb). Bechdel scores are from bechdeltest.com.
 
 # Files
-- bechdel_20190115.json: contains the most updated Bechdel scores from bechdeltest.com as of Jan 15, 2019
-- data_loader.py: contains DataLoader object to load information about movies from data/ to memory as Movie Python objects.
-- make_data.py: extracts metadata from IMDb and Bechdel score from json files; writes them all into text files
+- bechdel_20190115.json: contains the most updated Bechdel scores from bechdeltest.com as of Jan 15, 2019.
+- data_loader.py: contains DataLoader object to load information about movies from data/to memory as Movie objects.
+- make_data.py: extracts metadata from IMDb and Bechdel score from json files; writes them all into text files.
 - Movie.py: Object storing information about a particular movie.
 - Character.py: Object storing information about a particular character.
 
