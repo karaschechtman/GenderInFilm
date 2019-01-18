@@ -1,7 +1,7 @@
 __author__ = "Kara Schechtman <kws2121@columbia.edu>"
 __date__ = "Jan 15, 2019"
 
-DATA_PATH = "data"
+DATA_PATH = "data/agarwal"
 
 IMDB_KEY = "IMDB: "
 TITLE_KEY = "Title: "
@@ -22,6 +22,14 @@ class AgarwalDataManager(object):
     def __init__(self):
         self.movies = []
         data_dir = os.path.join(os.getcwd(), DATA_PATH)
+
+        # none check function
+        def check_none(field, cast_fn=str):
+            if field == 'None':
+                return None
+            else:
+                return cast_fn(field)
+
         for filename in os.listdir(data_dir):
             if filename.endswith(".txt"):
                 filepath = os.path.join(data_dir, filename)
@@ -41,13 +49,14 @@ class AgarwalDataManager(object):
                                        ' metadata formatted incorrectly.')
 
                     # Get metadata.
-                    imdb = lines[0].split(': ')[1].rstrip()
-                    title = ': '.join(lines[1].split(': ')[1:]).rstrip()
-                    year = int(lines[2].split(': ')[1].rstrip())
-                    genre = lines[3].split(': ')[1].rstrip().split(', ')
-                    director = lines[4].split(': ')[1].rstrip()
-                    rating = float(lines[5].split(': ')[1].rstrip())
-                    bechdel_score = int(lines[6].split(': ')[1].rstrip())
+                    imdb = check_none(lines[0].split(': ')[1].rstrip())
+                    title = check_none(': '.join(lines[1].split(': ')[1:]).rstrip())
+                    year = check_none(lines[2].split(': ')[1].rstrip(), int)
+                    genre = check_none(lines[3].split(': ')[1].rstrip().split(', '), list)
+                    director = check_none(lines[4].split(': ')[1].rstrip())
+                    rating = check_none(lines[5].split(': ')[1].rstrip(), float)
+                    bechdel_score = lines[6].split(': ')[1].rstrip()
+                    bechdel_score = None if bechdel_score == 'N/A' else int(bechdel_score)
                     imdb_cast_list = lines[7].split(': ')[1].rstrip().split(', ')
                     imdb_cast = [tuple(entry.split(' | ')) for entry in imdb_cast_list]
 
@@ -57,10 +66,18 @@ class AgarwalDataManager(object):
                                          bechdel_score, imdb_cast,
                                          lines[8:]))
 
-    def get_movies_by_genre(genre):
-        """
-        TO BE IMPLEMENTED:
-        Given a movie with a particular name, return all
-        movies of that genre as Movie objects in a list.
-        """
-        return []
+    def write_data(self):
+        for movie in self.movies:
+            filename = 'data/%s.txt' % (movie.title)
+            with open(filename, 'w+') as file:
+                print(movie.title)
+                file.write('%s%s\n' % (IMDB_KEY, movie.imdb))
+                file.write('%s%s\n' % (TITLE_KEY, movie.title))
+                file.write('%s%s\n' % (YEAR_KEY, movie.year))
+                file.write('%s%s\n' % (GENRE_KEY, ', '.join(movie.genre)))
+                file.write('%s%s\n' % (DIRECTOR_KEY, movie.director))
+                file.write('%s%s\n' % (RATING_KEY, movie.rating))
+                file.write('%s%s\n' % (BECHDEL_SCORE_KEY, movie.bechdel_score))
+                file.write('%s%s\n\n' % (IMDB_CAST_KEY, ', '.join('%s | %s' % (tup[0], tup[1]) for tup in movie.imdb_cast)))
+                for character in movie.characters:
+                    file.write('%s: %s\n' % (character.name, ', '.join(['%s' % (i) for i in character.line_data])))
