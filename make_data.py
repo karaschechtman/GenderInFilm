@@ -55,6 +55,7 @@ def extract_imdb_char_names(soup):
     return char_names
 
 def clean_char_name_text(text):
+    text = text.replace(',', '')  # strip commas
     char_names = text.split('/')  # sometimes a row lists multiple character names
     cleaned_names = []
     for cn in char_names:
@@ -100,20 +101,40 @@ def extract_imdb_rating(soup):
         return float(rating_wrap.text)
     return None
 
-def extract_imdb_director_and_gender(soup):
+# returns a list of tuples: < director name, gender >
+def extract_imdb_dir_tuples(soup):
+    tuples = []
+    found_names = set()
     crew_list = soup.find_all('div', attrs={'class':'credit_summary_item'})
     for item in crew_list:
-        text = item.text
-        if 'Director' in text:
-            name = text.split(':')[1].strip()
-            gender = None
-            link = item.find('a')
-            if link is not None:
-                bio_url = IMDB_DOMAIN + link['href']
-                bio_soup = BeautifulSoup(requests.get(bio_url).content, 'html.parser')
-                gender = predict_gender_from_bio(bio_soup)
-            return name, gender
-    return None, None
+        if 'Director' in item.text:
+            links = item.find_all('a')
+            for l in links:
+                if 'more credits' not in l.text:
+                    name = l.text.strip()
+                    found_names.add(name)
+                    bio_url = IMDB_DOMAIN + l['href']
+                    bio_soup = BeautifulSoup(requests.get(bio_url).content, 'html.parser')
+                    gender = predict_gender_from_bio(bio_soup)
+                    tuples.append((name, gender))
+                else:
+                    imdb_id = extract_imdb_id(soup)
+                    creds_url = '{}/title/tt{}/{}'.format(IMDB_DOMAIN, imdb_id, l['href'])
+                    creds_soup = BeautifulSoup(requests.get(creds_url).content, 'html.parser')
+                    headers = creds_soup.find_all('h4', attrs={'class':'dataHeaderWithBorder'})
+                    tables = creds_soup.find_all('table', attrs={'class':'simpleTable simpleCreditsTable'})
+                    for h, t in zip(headers, tables):
+                        if 'Directed by' in h.text:
+                            for name_item in t.find_all('td', attrs={'class':'name'}):
+                                name = name_item.text.strip()
+                                if name not in found_names:
+                                    found_names.add(name)
+                                    bio_url = IMDB_DOMAIN + name_item.find('a')['href']
+                                    bio_soup = BeautifulSoup(requests.get(bio_url).content, 'html.parser')
+                                    gender = predict_gender_from_bio(bio_soup)
+                                    tuples.append((name, gender))
+                            break
+    return tuples
 
 # returns list of tuples: < character name, actor name, actor gender >
 def extract_imdb_char_tuples(soup):
@@ -196,10 +217,10 @@ def convert_screenplays_to_dl_files(continue_work=True, max_files=None):
                         ID = extract_imdb_id(soup)
                         title, year, genres = extract_imdb_headings(soup)
                         rating = extract_imdb_rating(soup)
-                        dir_name, dir_gender = extract_imdb_director_and_gender(soup)
+                        dir_tuples = extract_imdb_dir_tuples(soup)
                         char_tuples = extract_imdb_char_tuples(soup)  # character name, actor name, actor gender
                         bechdel_score = bechdel_dict.get(ID)
-                        metadata = format_metadata(ID, title, year, genres, rating, dir_name, dir_gender, char_tuples, bechdel_score)
+                        metadata = format_metadata(ID, title, year, genres, rating, dir_tuples, char_tuples, bechdel_score)
                         new_fn = PATH_TO_DATA + '{}___{}.txt'.format('_'.join(title.split()), year)
                         with open(new_fn, 'w') as new_f:
                             new_f.write(metadata)
@@ -209,37 +230,41 @@ def convert_screenplays_to_dl_files(continue_work=True, max_files=None):
             except ValueError:
                 print(fn)
 
-def format_metadata(ID, title, year, genres, rating, dir_name, dir_gender, char_tuples, bechdel_score):
-    if dir_gender is None:
-        dir_gender = '?'
+def format_metadata(ID, title, year, genres, rating, dir_tuples, char_tuples, bechdel_score):
+    genres = ', '.join(sorted(list(genres)))  # sort alphabetically
+    tuples_as_strings = []
+    for d, g in dir_tuples:
+        if g is None:
+            g = '?'
+        tuples_as_strings.append('{} ({})'.format(d, g))
+    dir_str = ', '.join(tuples_as_strings)
     if bechdel_score is None:
         bechdel_score = 'N/A'
-    genres = ', '.join(sorted(list(genres)))  # sort alphabetically
-    string = 'IMDB: {}\nTitle: {}\nYear: {}\nGenre: {}\nDirector: {} ({})\nRating: {}\nBechdel score: {}\nIMDB Cast: '.format(
-        ID, title, year, genres, dir_name, dir_gender, rating, bechdel_score)
     tuples_as_strings = []
     for c, a, g in char_tuples:
         if g is None:
             g = '?'
         tuples_as_strings.append('{} | {} ({})'.format(c, a, g))
-    string += ', '.join(tuples_as_strings) + '\n'
-    return string
+    char_str = ', '.join(tuples_as_strings)
+    return 'IMDB: {}\nTitle: {}\nYear: {}\nGenre: {}\nDirector: {}\nRating: {}\nBechdel score: {}\nIMDB Cast: {}\n'.format(
+        ID, title, year, genres, dir_str, rating, bechdel_score, char_str)
 
 def demo(imdb_movie_url, bechdel_dict):
     soup = BeautifulSoup(requests.get(imdb_movie_url).content, 'html.parser')
     ID = extract_imdb_id(soup)
     title, year, genres = extract_imdb_headings(soup)
     rating = extract_imdb_rating(soup)
-    dir_name, dir_gender = extract_imdb_director_and_gender(soup)
+    dir_tuples = extract_imdb_dir_tuples(soup)
     char_tuples = extract_imdb_char_tuples(soup)
     bechdel_score = bechdel_dict.get(ID)
-    metadata = format_metadata(ID, title, year, genres, rating, dir_name, dir_gender, char_tuples, bechdel_score)
+    metadata = format_metadata(ID, title, year, genres, rating, dir_tuples, char_tuples, bechdel_score)
     print(metadata)
 
 if __name__ == "__main__":
     bechdel_dict = make_bechdel_dict()
     carol_url = 'https://www.imdb.com/title/tt2402927/'
-    pitch_perfect_url = 'https://www.imdb.com/title/tt1981677/'
-    has_multiname_characters = 'https://www.imdb.com/title/tt0103241/'
-    # demo(carol_url, bechdel_dict)
-    convert_screenplays_to_dl_files(continue_work=True)
+    bob_url = 'https://www.imdb.com/title/tt0103241/'  # has multiname characters
+    thelma_and_louise_url = 'https://www.imdb.com/title/tt0103074/'  # has commas in char names
+    four_rooms_url = 'https://www.imdb.com/title/tt0113101/'  # has multiple directors
+    demo(thelma_and_louise_url, bechdel_dict)
+    # convert_screenplays_to_dl_files(continue_work=True)
