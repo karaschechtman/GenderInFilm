@@ -57,7 +57,7 @@ class AgarwalDataManager(object):
                     rating = check_none(lines[5].split(': ')[1].rstrip(), float)
                     bechdel_score = lines[6].split(': ')[1].rstrip()
                     bechdel_score = None if bechdel_score == 'N/A' else int(bechdel_score)
-                    imdb_cast_list = lines[7].split(': ')[1].rstrip().split(', ')
+                    imdb_cast_list = ': '.join(lines[7].split(': ')[1:]).rstrip().split(', ')
                     imdb_cast = [tuple(entry.split(' | ')) for entry in imdb_cast_list]
 
                 # Create movie object and save.

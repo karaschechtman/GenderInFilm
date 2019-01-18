@@ -32,8 +32,8 @@ class Movie(object):
         names = defaultdict(list)
         for datum in script:
             if datum.startswith(CHARACTER):
-                name = variant_to_root(datum.split(CHARACTER)[1].strip())
                 names[name].append(dialogue.strip())
+                name = variant_to_root(datum.split(CHARACTER)[1].strip())
                 dialogue = ''
             if datum.startswith(DIALOGUE):
                 dialogue += ' ' + datum.split(DIALOGUE)[1].strip()
@@ -42,5 +42,8 @@ class Movie(object):
         for name in names:
             line_data = []
             for line in names[name]:
-                line_data.append(len(line.split()))
-            self.characters.append(Character(name, line_data))
+                words = line.split()
+                if len(words) != 0:
+                    line_data.append(len(words))
+            if len(line_data) != 0:
+                self.characters.append(Character(name, line_data))
