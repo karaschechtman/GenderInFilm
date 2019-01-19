@@ -5,16 +5,13 @@ from Character import Character
 from collections import defaultdict
 from name_processing import variant_to_root
 
-CHARACTER = 'C|'
-DIALOGUE = 'D|'
-
 class Movie(object):
     """
     Stores data and metadata about a particular movie.
     """
     def __init__(self, imdb, title, year,
                  genre, director, rating, bechdel_score,
-                 imdb_cast, script):
+                 imdb_cast, characters):
         # Set metadata.
         self.imdb = imdb
         self.title = title
@@ -24,26 +21,4 @@ class Movie(object):
         self.rating = rating
         self.bechdel_score = bechdel_score
         self.imdb_cast = imdb_cast
-        self.characters = []
-
-        # Create a mapping from characters to their lines.
-        name = None
-        dialogue = ''
-        names = defaultdict(list)
-        for datum in script:
-            if datum.startswith(CHARACTER):
-                names[name].append(dialogue.strip())
-                name = variant_to_root(datum.split(CHARACTER)[1].strip())
-                dialogue = ''
-            if datum.startswith(DIALOGUE):
-                dialogue += ' ' + datum.split(DIALOGUE)[1].strip()
-
-        # Create and save character objects.
-        for name in names:
-            line_data = []
-            for line in names[name]:
-                words = line.split()
-                if len(words) != 0:
-                    line_data.append(len(words))
-            if len(line_data) != 0:
-                self.characters.append(Character(name, line_data))
+        self.characters = characters
