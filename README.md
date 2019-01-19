@@ -23,8 +23,10 @@ Data is stored in the data/ folder and contains both metadata about the movie an
 
 ## Script data format
 
-```for each character:
-<character name, str>: <lines, list of int>```
+```
+for each character:
+<character name, str>: <lines, list of int>
+```
 
 - The names appear in order of first appearance in the script.
 - Each entry in the lines list represents one continuous line delivered by the character.
