@@ -2,15 +2,17 @@
 Simple Python interface for analyzing data about gender in film. Data from Agarwal et. al (2015) and the Internet Movie Database (IMDb). Bechdel scores are from bechdeltest.com.
 
 # Files
-- bechdel_20190115.json: contains the most updated Bechdel scores from bechdeltest.com as of Jan 15, 2019.
-- data_loader.py: contains DataLoader object to load information about movies from data/to memory as Movie objects.
-- make_data.py: extracts metadata from IMDb and Bechdel score from json files; writes them all into text files.
-- Movie.py: Object storing information about a particular movie.
-- Character.py: Object storing information about a particular character.
+- `bechdel_20190115.json`: contains the most updated Bechdel scores from bechdeltest.com as of Jan 15, 2019.
+- `agarwal_data_manager.py:` contains AgarwalDataManager object to load data from Agarwal files and write new versions with line counts for characters rather than full scripts.
+- `data_loader.py`: contains DataLoader object to load information about movies from data/to memory as Movie objects.
+- `make_data.py`: extracts metadata from IMDb and Bechdel score from json files; writes them all into text files.
+- `movie.py`: Object storing information about a particular movie.
+- `character.py`: Object storing information about a particular character.
 
 # Data
-Data is stored in the data/ folder and contains both metadata about the movie and the processed Agarwal movie script. Metadata is as follows:
+Data is stored in the data/ folder and contains both metadata about the movie and the processed Agarwal movie script, mainly consisting of information about character line data. 
 
+## Metadata format
 - IMBD: `<imdb id, str>`
 - Title: `<title, str>`
 - Year: `<year, int>`
@@ -19,11 +21,11 @@ Data is stored in the data/ folder and contains both metadata about the movie an
 - Rating: `<rating between 0 and 10 (inclusive), float>`
 - Bechdel Score: `<score, int>`
 
-Data provided about the script is stored in the following way:
+## Script data format
 
-```<name, str>: <lines, list of int>```
+```for each character:
+<character name, str>: <lines, list of int>```
 
-How to interpret:
 - The names appear in order of first appearance in the script.
 - Each entry in the lines list represents one continuous line delivered by the character.
 - The integer represents the number of words in that particular line. Lines are in order of appearance.
