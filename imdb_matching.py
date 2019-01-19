@@ -137,7 +137,6 @@ def _backtrack(script_to_imdb, assignments):
 
     # Check failure condition.
     if len(script_to_imdb[sname]) == 0:
-        print('hi')
         return False
 
     # Order potential assignments according to LCV heuristic.
