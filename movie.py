@@ -1,5 +1,5 @@
-__author__ = "Kara Schechtman <kws2121@columbia.edu>"
-__date__ = "Jan 15, 2019"
+__author__ = 'Kara Schechtman <kws2121@columbia.edu>'
+__date__ = 'Jan 15, 2019'
 
 from Character import Character
 from collections import defaultdict

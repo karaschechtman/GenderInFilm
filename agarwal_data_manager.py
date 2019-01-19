@@ -1,16 +1,16 @@
-__author__ = "Kara Schechtman <kws2121@columbia.edu>"
-__date__ = "Jan 15, 2019"
+__author__ = 'Kara Schechtman <kws2121@columbia.edu>'
+__date__ = 'Jan 15, 2019'
 
-DATA_PATH = "data/agarwal"
+DATA_PATH = 'data/agarwal'
 
-IMDB_KEY = "IMDB: "
-TITLE_KEY = "Title: "
-YEAR_KEY = "Year: "
-GENRE_KEY = "Genre: "
-DIRECTOR_KEY = "Director: "
-RATING_KEY = "Rating: "
-BECHDEL_SCORE_KEY = "Bechdel score: "
-IMDB_CAST_KEY = "IMDB Cast: "
+IMDB_KEY = 'IMDB: '
+TITLE_KEY = 'Title: '
+YEAR_KEY = 'Year: '
+GENRE_KEY = 'Genre: '
+DIRECTOR_KEY = 'Director: '
+RATING_KEY = 'Rating: '
+BECHDEL_SCORE_KEY = 'Bechdel score: '
+IMDB_CAST_KEY = 'IMDB Cast: '
 
 CHARACTER = 'C|'
 DIALOGUE = 'D|'
@@ -30,7 +30,7 @@ class AgarwalDataManager(object):
         data_dir = os.path.join(os.getcwd(), DATA_PATH)
 
         for filename in os.listdir(data_dir):
-            if filename.endswith(".txt"):
+            if filename.endswith('.txt'):
                 filepath = os.path.join(data_dir, filename)
                 with open(filepath, 'r') as file:
                     lines = file.readlines()
@@ -105,6 +105,10 @@ def _check_metadata_format(lines):
                        ' metadata formatted incorrectly.')
 
 def _extract_characters(script):
+    """
+    Helper to extract information on character dialogue lines
+    from the Agarwal script file.
+    """
     name = None
     dialogue = ''
     names = OrderedDict()

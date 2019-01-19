@@ -11,13 +11,22 @@ Simple Python interface for analyzing data about gender in film. Data from Agarw
 # Data
 Data is stored in the data/ folder and contains both metadata about the movie and the processed Agarwal movie script. Metadata is as follows:
 
-- IMBD: <imdb id, str>
-- Title: <title, str>
-- Year: <year, int>
-- Genre: <genres, list of str>
-- Director <director name, str>
-- Rating: <rating between 0 and 10 (inclusive), float>
-- Bechdel Score: <score, int>
+- IMBD: `<imdb id, str>`
+- Title: `<title, str>`
+- Year: `<year, int>`
+- Genre: `<genres, list of str>`
+- Director: `<director name, str>`
+- Rating: `<rating between 0 and 10 (inclusive), float>`
+- Bechdel Score: `<score, int>`
+
+Data provided about the script is stored in the following way:
+
+```<name, str>: <lines, list of int>```
+
+How to interpret:
+- The names appear in order of first appearance in the script.
+- Each entry in the lines list represents one continuous line delivered by the character.
+- The integer represents the number of words in that particular line. Lines are in order of appearance.
 
 # Authors
 Created by Kara Schechtman (kws2121@columbia.edu) and Serina Chang (sc3003@columbia.edu).

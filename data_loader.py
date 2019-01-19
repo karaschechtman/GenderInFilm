@@ -1,16 +1,16 @@
-__author__ = "Kara Schechtman <kws2121@columbia.edu>"
-__date__ = "Jan 15, 2019"
+__author__ = 'Kara Schechtman <kws2121@columbia.edu>'
+__date__ = 'Jan 15, 2019'
 
-DATA_PATH = "data/"
+DATA_PATH = 'data/'
 
-IMDB_KEY = "IMDB: "
-TITLE_KEY = "Title: "
-YEAR_KEY = "Year: "
-GENRE_KEY = "Genre: "
-DIRECTOR_KEY = "Director: "
-RATING_KEY = "Rating: "
-BECHDEL_SCORE_KEY = "Bechdel score: "
-IMDB_CAST_KEY = "IMDB Cast: "
+IMDB_KEY = 'IMDB: '
+TITLE_KEY = 'Title: '
+YEAR_KEY = 'Year: '
+GENRE_KEY = 'Genre: '
+DIRECTOR_KEY = 'Director: '
+RATING_KEY = 'Rating: '
+BECHDEL_SCORE_KEY = 'Bechdel score: '
+IMDB_CAST_KEY = 'IMDB Cast: '
 
 import os
 from Character import Character
@@ -25,7 +25,7 @@ class DataLoader(object):
         data_dir = os.path.join(os.getcwd(), DATA_PATH)
 
         for filename in os.listdir(data_dir):
-            if filename.endswith(".txt"):
+            if filename.endswith('.txt'):
                 filepath = os.path.join(data_dir, filename)
                 with open(filepath, 'r') as file:
                     lines = file.readlines()
@@ -33,7 +33,7 @@ class DataLoader(object):
                     # Get metadata.
                     imdb = _read_field(lines[0])
                     title = _read_field(lines[1])
-                    print("Loading %s..." % (title) )
+                    print('Loading %s...' % (title) )
                     year = _read_field(lines[2], cast_fn=int)
                     genre = _read_field(lines[3], split=True)
                     director = _read_field(lines[4])
@@ -49,7 +49,7 @@ class DataLoader(object):
                                          genre, director, rating,
                                          bechdel_score, imdb_cast,
                                          characters))
-        print("All data loaded!")
+        print('All data loaded!')
 
 def _read_field(line, cast_fn = None, split = False):
     """
@@ -84,7 +84,7 @@ def _check_metadata_format(lines):
 
 def _extract_characters(script):
     """
-    Helper function to create Character objects from a file.
+    Helper function to create Character objects from file.
     """
     characters = []
     for person in script:
