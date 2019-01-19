@@ -8,7 +8,9 @@ Simple Python interface for analyzing data about gender in film. Data from Agarw
 - `make_data.py`: extracts metadata from IMDb and Bechdel score from json files; writes them all into text files.
 - `movie.py`: Object storing information about a particular movie.
 - `character.py`: Object storing information about a particular character.
-
+- `imdb_matching.py:` Handles matching characters to IMDB gender data.
+- `ssa_matching.py:` Handles matching characters to SSA data.
+- `name_processing.py:` Processes name data.
 # Data
 Data is stored in the data/ folder and contains both metadata about the movie and the processed Agarwal movie script, mainly consisting of information about character line data. 
 
@@ -23,8 +25,8 @@ Data is stored in the data/ folder and contains both metadata about the movie an
 
 ## Script data format
 
-```
 for each character:
+```
 <character name, str>: <lines, list of int>
 ```
 
