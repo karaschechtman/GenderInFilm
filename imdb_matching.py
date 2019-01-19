@@ -12,7 +12,6 @@ import difflib
 # ----------------------- GENERAL UTILITIES -----------------------
 def _get_imdb_gender_mapping(cast):
     """
-    Helper for test_alignment_coverage and test_assignment_coverage.
     Processes IMDB character data from file and makes a dictionary
     mapping from their names to the gender of the actor that
     portrays them.
@@ -60,6 +59,10 @@ def blended_align(iname, sname, threshold=THRESHOLD):
     return False
 
 # --------------------------- ASSIGNMENT --------------------------
+
+# TODO(karaschechtman): baseline of "better" alignments
+# (assign alignment with highest quality measured by overlap)
+
 def _hard_backtrack(script_to_imdb, assignments):
     """
     Recursive helper function for hard backtracking.
@@ -214,12 +217,14 @@ def _count_matches_per_script(lines, alignment_fn):
 
     return chars_matched, chars_missed, lines_matched, lines_missed
 
-def test_alignment_coverage(alignment_fn, verbose=False):
+def test_alignment_coverage(alignment_fn):
     """
-    Checks coverage for an alignment function - whether
-    each name in the script is matched to at least one
-    other name by alignment_fn, and how many lines that
-    coverage represents.
+    Checks coverage for an alignment function.
+    Provides two statistics
+    1. Characters covered - a script character is covered by
+    alignment if it matches at least one IMDB name.
+    2. Lines with alignments - a line is covered by alignment
+    if it is spoken by a character with an aligned name.
     """
     total_chars_matched = 0
     total_lines_matched = 0
@@ -231,8 +236,6 @@ def test_alignment_coverage(alignment_fn, verbose=False):
             with open(PATH_TO_DATA + fn, 'r') as f:
                 chars_matched, chars_missed, lines_matched, lines_missed = (
                     _count_matches_per_script(f.readlines(), alignment_fn))
-                if verbose:
-                    print('Matched: {}. Missed: {}'.format(matched, missed))
                 total_chars_matched += chars_matched
                 total_chars_missed += chars_missed
                 total_lines_matched += lines_matched
@@ -254,12 +257,23 @@ def test_alignment_coverage(alignment_fn, verbose=False):
                                               round(total_lines_missed/total_lines * 100, 2)))
     print('----------------------------')
 
-def test_assignment_coverage(assignment_fn, alignment_fn, verbose=False):
+def test_assignment_coverage(assignment_fn, alignment_fn):
     """
     Tests coverage of assignments from alignments.
-    Provides four statistics:
-    1. Number of files matched.
-
+    Provides five statistics:
+    1. Files with successful assignment - a file produces
+    some assignment of names to IMDb characters. Failure
+    happens if all possible assignments are inconsistent
+    (according to the assignment criteria being used in the
+    assignment_fn), or if there is no IMDB data to align.
+    2. Number of characters successfully assigned - characters
+    with an IMDb match. (TODO)
+    3. Number of lines successfully assigned - lines spoken
+    by characters with an IMDB match. (TODO)
+    4. Number of characters successfully gendered -  characters
+    with an IMDb match that has a gender. (TODO)
+    5. Number of lines successfully gendered -  lines spoken
+    by characters with an IMDb match that has a gender. (TODO)
     """
     total_success = 0
     total_failure = 0
@@ -268,15 +282,14 @@ def test_assignment_coverage(assignment_fn, alignment_fn, verbose=False):
             with open(PATH_TO_DATA + fn, 'r') as f:
                 assignment = assignment_fn(f.readlines(), alignment_fn)
                 if assignment:
-                    if verbose:
-                        print(assignment)
                     total_success += 1
                 else:
                     total_failure += 1
     total_attempts = total_success + total_failure
+    # TODO: move file parsing logic to test function.
     print("ASSIGNMENT TEST: %s assignment with %s alignment" % (assignment_fn.__name__, alignment_fn.__name__))
-    print("Script assignment successes: {} / {}%  \
-           Script assignment failures: {} / {}%".format(total_success,
+    print("File assignment successes: {} / {}%  \
+           File assignment failures: {} / {}%".format(total_success,
                                            round(total_success/total_attempts * 100, 2),
                                            total_failure,
                                            round(total_failure/total_attempts * 100, 2)))
