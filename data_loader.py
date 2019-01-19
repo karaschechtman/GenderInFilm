@@ -1,7 +1,7 @@
 __author__ = "Kara Schechtman <kws2121@columbia.edu>"
 __date__ = "Jan 15, 2019"
 
-DATA_PATH = "data/agarwal"
+DATA_PATH = "data/"
 
 IMDB_KEY = "IMDB: "
 TITLE_KEY = "Title: "
@@ -12,16 +12,11 @@ RATING_KEY = "Rating: "
 BECHDEL_SCORE_KEY = "Bechdel score: "
 IMDB_CAST_KEY = "IMDB Cast: "
 
-CHARACTER = 'C|'
-DIALOGUE = 'D|'
-
 import os
 from Character import Character
-from collections import OrderedDict
 from movie import Movie
-from name_processing import variant_to_root
 
-class AgarwalDataManager(object):
+class DataLoader(object):
     """
     Loads metadata and data of movie files into Movie objects.
     """
@@ -35,10 +30,10 @@ class AgarwalDataManager(object):
                 with open(filepath, 'r') as file:
                     lines = file.readlines()
                     _check_metadata_format(lines)
-
-                    # Extract data from files.
+                    # Get metadata.
                     imdb = _read_field(lines[0])
                     title = _read_field(lines[1])
+                    print("Loading %s..." % (title) )
                     year = _read_field(lines[2], cast_fn=int)
                     genre = _read_field(lines[3], split=True)
                     director = _read_field(lines[4])
@@ -47,37 +42,21 @@ class AgarwalDataManager(object):
                     imdb_cast_list = _read_field(lines[7], split=True)
                     imdb_cast = imdb_cast_list if not imdb_cast_list \
                                 else [tuple(entry.split(' | ')) for entry in imdb_cast_list]
-                    characters = _extract_characters(lines[8:])
+                    characters = _extract_characters(lines[9:])
 
                 # Create movie object and save.
                 self.movies.append(Movie(imdb, title, year,
                                          genre, director, rating,
                                          bechdel_score, imdb_cast,
                                          characters))
-
-    def write(self):
-        for movie in self.movies:
-            filename = 'data/%s.txt' % (movie.title)
-            with open(filename, 'w+') as file:
-                print(movie.title)
-                file.write('%s%s\n' % (IMDB_KEY, movie.imdb))
-                file.write('%s%s\n' % (TITLE_KEY, movie.title))
-                file.write('%s%s\n' % (YEAR_KEY, movie.year))
-                file.write('%s%s\n' % (GENRE_KEY, ', '.join(movie.genre)))
-                file.write('%s%s\n' % (DIRECTOR_KEY, movie.director))
-                file.write('%s%s\n' % (RATING_KEY, movie.rating))
-                file.write('%s%s\n' % (BECHDEL_SCORE_KEY, movie.bechdel_score))
-                file.write('%s%s\n\n' % (IMDB_CAST_KEY, ', '.join('%s | %s' % (tup[0], tup[1]) for tup in movie.imdb_cast)))
-                for character in movie.characters:
-                    file.write('%s: %s\n' % (character.name, ', '.join(['%s' % (i) for i in character.line_data])))
-
+        print("All data loaded!")
 
 def _read_field(line, cast_fn = None, split = False):
     """
     Helper function to handle retrieve field value from the text file.
     """
     field = ': '.join(line.split(': ')[1:]).rstrip() # Read in the field.
-    if field == 'None' or field == 'N/A':
+    if field == 'None':
         return None
     elif split == True:
         return field.split(', ')
@@ -88,8 +67,7 @@ def _read_field(line, cast_fn = None, split = False):
 
 def _check_metadata_format(lines):
     """
-    Helper function to check the metadata of the file
-    is formatted correctly.
+    Helper function to check format of the metadata in Agarwal.
     """
     # Ensure the metadata order is correct.
     if IMDB_KEY not in lines[0] or \
@@ -105,28 +83,13 @@ def _check_metadata_format(lines):
                        ' metadata formatted incorrectly.')
 
 def _extract_characters(script):
-    name = None
-    dialogue = ''
-    names = OrderedDict()
-    for datum in script:
-        if datum.startswith(CHARACTER):
-            if name in names.keys():
-                names[name].append(dialogue.strip())
-            else:
-                names[name] = [dialogue.strip()]
-            name = variant_to_root(datum.split(CHARACTER)[1].strip())
-            dialogue = ''
-        if datum.startswith(DIALOGUE):
-            dialogue += ' ' + datum.split(DIALOGUE)[1].strip()
-
-    # Create and save character objects.
+    """
+    Helper function to create Character objects from a file.
+    """
     characters = []
-    for name in names:
-        line_data = []
-        for line in names[name]:
-            words = line.split()
-            if len(words) != 0:
-                line_data.append(len(words))
-        if len(line_data) != 0:
-            characters.append(Character(name, line_data))
+    for person in script:
+        name_to_lines = person.rstrip().split(': ')
+        name = ': '.join(name_to_lines[0:-1])
+        line_data = [int(num) for num in name_to_lines[-1].split(', ')]
+        characters.append(Character(name, line_data))
     return characters
