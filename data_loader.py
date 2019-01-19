@@ -13,7 +13,7 @@ BECHDEL_SCORE_KEY = 'Bechdel score: '
 IMDB_CAST_KEY = 'IMDB Cast: '
 
 import os
-from Character import Character
+from character import Character
 from movie import Movie
 
 class DataLoader(object):

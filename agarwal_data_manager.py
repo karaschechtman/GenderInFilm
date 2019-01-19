@@ -16,7 +16,7 @@ CHARACTER = 'C|'
 DIALOGUE = 'D|'
 
 import os
-from Character import Character
+from character import Character
 from collections import OrderedDict
 from movie import Movie
 from name_processing import variant_to_root
@@ -107,7 +107,7 @@ def _check_metadata_format(lines):
 def _extract_characters(script):
     """
     Helper to extract information on character dialogue lines
-    from the Agarwal script file.
+    from the Agarwal script.
     """
     name = None
     dialogue = ''

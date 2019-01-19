@@ -1,7 +1,7 @@
 __author__ = 'Kara Schechtman <kws2121@columbia.edu>'
 __date__ = 'Jan 15, 2019'
 
-from Character import Character
+from character import Character
 from collections import defaultdict
 from name_processing import variant_to_root
 
