@@ -141,7 +141,8 @@ def _backtrack(script_to_imdb, assignments):
 
     # Order potential assignments according to LCV heuristic.
     # This enforces a soft preference for matching snames
-    # to unique inames (which is not expressly forbidden).
+    # to unique inames (repeated iname assignment is not
+    # expressly forbidden).
     ordered_inames = []
     for iname in script_to_imdb[sname]:
         num_occurences = sum([1 for s in script_to_imdb if iname in script_to_imdb[s]])
