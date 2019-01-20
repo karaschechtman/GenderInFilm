@@ -80,7 +80,7 @@ def _hard_backtrack(script_to_imdb, assignments):
         return assignments
 
     # Choose variable to assign according to MRV heuristic.
-    sname = max(script_to_imdb, key=lambda k: len(script_to_imdb[k]))
+    sname = min(script_to_imdb, key=lambda k: len(script_to_imdb[k]))
 
     # Check failure condition.
     if len(script_to_imdb[sname]) == 0:
@@ -134,7 +134,7 @@ def _soft_backtrack(script_to_imdb, assignments):
         return assignments
 
     # Choose variable to assign according to MRV heuristic.
-    sname = max(script_to_imdb, key=lambda k: len(script_to_imdb[k]))
+    sname = min(script_to_imdb, key=lambda k: len(script_to_imdb[k]))
 
     # Order potential assignments according to LCV heuristic.
     # This enforces a soft preference for matching snames
