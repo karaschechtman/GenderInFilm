@@ -2,20 +2,20 @@ from data_loader import DataLoader
 from imdb_matching import *
 from ssa_matching import *
 
-"""Statistics for coverage."""
+"""Testing coverage over the entire dataset."""
 
 def _test_alignment_coverage(movie, alignment_fn):
     """
     Helper for test_all_alignment_coverage to count matches
     in an individual script.
     """
-    inames = [c[0].lower() for c in movie.imdb_cast]
+    inames = [c.lower() for c in movie.imdb_cast]
     chars_matched = 0
     chars_missed = 0
     lines_matched = 0
     lines_missed = 0
 
-    for character in movie.characters:
+    for character in movie.characters.values():
         if any([alignment_fn(iname, character.name) for iname in inames]):
             chars_matched += 1
             lines_matched += len(character.line_data)
@@ -80,7 +80,7 @@ def _test_assignment_coverage(movie, alignment_fn, assignment_fn):
     aligned_char_count = 0
     aligned_line_count = 0
     # Align script characters to possible IMDb characters.
-    for character in movie.characters:
+    for character in movie.characters.values():
         for iname in inames:
             if alignment_fn(iname, character.name):
                 script_to_imdb[character.name].append(iname)
@@ -95,7 +95,7 @@ def _test_assignment_coverage(movie, alignment_fn, assignment_fn):
     assignment = assignment_fn(script_to_imdb)
     if assignment:
         for sname in assignment:
-            gender = inames[assignment[sname]]
+            gender = inames[assignment[sname]][1]
             if gender == 'M' or gender == 'F':
                 chars_gendered += 1
         success += 1
@@ -237,18 +237,19 @@ def test_all_ssa_coverage(data, mode, check_decade):
 
 if __name__ == "__main__":
     data = DataLoader(verbose=False)
-    # test_all_alignment_coverage(data, in_align)
-    # test_all_alignment_coverage(data, threshold_align)
-    # test_all_alignment_coverage(data, blended_align)
-    # test_all_assignment_coverage(data, in_align, soft_backtrack)
-    # test_all_assignment_coverage(data, threshold_align, soft_backtrack)
-    # test_all_assignment_coverage(data, blended_align, soft_backtrack)
-    # test_all_assignment_coverage(data, in_align, hard_backtrack)
-    # test_all_assignment_coverage(data, threshold_align, hard_backtrack)
-    # test_all_assignment_coverage(data, blended_align, hard_backtrack)
-    test_all_ssa_coverage(data, mode='soft', check_decade=True)
-    test_all_ssa_coverage(data, mode ='soft', check_decade=False)
-    test_all_ssa_coverage(data, mode='hard', check_decade=True)
+    test_all_ssa_coverage(data, mode='soft', check_decade=False)
+    test_all_ssa_coverage(data, mode ='soft', check_decade=True)
     test_all_ssa_coverage(data, mode='hard', check_decade=False)
+    test_all_ssa_coverage(data, mode='hard', check_decade=True)
+    test_all_alignment_coverage(data, in_align)
+    test_all_alignment_coverage(data, threshold_align)
+    test_all_alignment_coverage(data, blended_align)
+    test_all_assignment_coverage(data, in_align, soft_backtrack)
+    test_all_assignment_coverage(data, threshold_align, soft_backtrack)
+    test_all_assignment_coverage(data, blended_align, soft_backtrack)
+    test_all_assignment_coverage(data, in_align, hard_backtrack)
+    test_all_assignment_coverage(data, threshold_align, hard_backtrack)
+    test_all_assignment_coverage(data, blended_align, hard_backtrack)
+
 
 

@@ -104,7 +104,6 @@ def score_gender_ssa(ssa_dict, char_name, movie_year=None, check_decade=True):
                 sum_score += ssa_dict[year][tok]
                 year_count += 1
         if year_count > 0:
-            print(tok)
             return sum_score / year_count
     return None
 
