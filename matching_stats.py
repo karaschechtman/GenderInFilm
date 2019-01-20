@@ -50,7 +50,7 @@ def test_all_alignment_coverage(data, alignment_fn):
     total_chars = total_chars_matched + total_chars_missed
     total_lines = total_lines_matched + total_lines_missed
 
-    print('ALIGNMENT TEST: %s' % (alignment_fn.__name__))
+    print('ALIGNMENT COVERAGE TEST: %s' % (alignment_fn.__name__))
     print('Total Characters Covered: {} / {}% \
     Total Characters Missed: {} / {}%' .format(total_chars_matched,
                                               round(total_chars_matched/total_chars * 100, 2),
@@ -150,7 +150,7 @@ def test_all_assignment_coverage(data, alignment_fn, assignment_fn):
     total_chars = total_chars_matched + total_chars_missed
     total_lines = total_lines_matched + total_lines_missed
 
-    print('ASSIGNMENT TEST: %s assignment with %s alignment' % (assignment_fn.__name__, alignment_fn.__name__))
+    print('ASSIGNMENT COVERAGE TEST: %s assignment with %s alignment' % (assignment_fn.__name__, alignment_fn.__name__))
     print('File assignment successes: {} / {}%  \
            File assignment failures: {} / {}%'.format(total_success,
                                                       round(total_success/total_attempts * 100, 2),
@@ -232,6 +232,7 @@ def test_all_ssa_coverage(data, check_decade):
                                           round(total_lines_matched/total_lines * 100, 2),
                                           total_lines_missed,
                                           round(total_lines_missed/total_lines * 100, 2)))
+    print('----------------------------')
 
 
 if __name__ == "__main__":
@@ -239,6 +240,9 @@ if __name__ == "__main__":
     test_all_alignment_coverage(data, in_align)
     test_all_alignment_coverage(data, threshold_align)
     test_all_alignment_coverage(data, blended_align)
+    test_all_assignment_coverage(data, in_align, baseline_assign)
+    test_all_assignment_coverage(data, threshold_align, baseline_assign)
+    test_all_assignment_coverage(data, blended_align, baseline_assign)
     test_all_assignment_coverage(data, in_align, soft_backtrack)
     test_all_assignment_coverage(data, threshold_align, soft_backtrack)
     test_all_assignment_coverage(data, blended_align, soft_backtrack)

@@ -54,8 +54,22 @@ def blended_align(iname, sname, threshold=THRESHOLD):
 
 # --------------------------- ASSIGNMENT --------------------------
 
-# TODO(karaschechtman): baseline of "better" alignments
-# (assign alignment with highest quality measured by overlap)
+def baseline_assign(script_to_imdb):
+    """
+    Baseline assignment function that assigns the IMDb
+    character with the highest overlapping character count.
+    """
+    assignments = {}
+    for sname in script_to_imdb:
+        inames = script_to_imdb[sname]
+        best_fit = 0
+        for iname in inames:
+            s = difflib.SequenceMatcher(None, sname, iname)
+            match = s.find_longest_match(0, len(sname), 0, len(iname))
+            if match.size >= best_fit:
+                assignments[sname] = iname
+                best_fit = match.size
+    return assignments
 
 def _hard_backtrack(script_to_imdb, assignments):
     """
