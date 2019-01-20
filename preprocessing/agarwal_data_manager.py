@@ -6,7 +6,6 @@ sys.path.append('..')
 
 DATA_PATH = '../data'
 AGARWAL_DIR = 'agarwal_with_metadata'
-NEW_DATA_DIR = 'data_loader_txt'
 
 IMDB_KEY = 'IMDB: '
 TITLE_KEY = 'Title: '
@@ -60,9 +59,8 @@ class AgarwalDataManager(object):
                                          characters))
 
     def write(self):
-        data_dir = os.path.join(DATA_PATH, NEW_DATA_DIR)
         for movie in self.movies:
-            filename = '%s/%s.txt' % (data_dir, movie.title)
+            filename = '%s/%s.txt' % (DATA_PATH, movie.title)
             with open(filename, 'w+') as file:
                 print(movie.title)
                 file.write('%s%s\n' % (IMDB_KEY, movie.imdb))
@@ -163,4 +161,3 @@ if __name__ == "__main__":
     adm = AgarwalDataManager()
     print(len(adm.movies))
     adm.write()
-    print(len(os.listdir(os.path.join(DATA_PATH, NEW_DATA_DIR))))
