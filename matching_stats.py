@@ -51,7 +51,7 @@ def test_all_alignment_coverage(data, alignment_fn):
     total_chars = total_chars_matched + total_chars_missed
     total_lines = total_lines_matched + total_lines_missed
 
-    print('ALIGNMENT TEST: %s' % (alignment_fn.__name__))
+    print('ALIGNMENT COVERAGE TEST: %s' % (alignment_fn.__name__))
     print('Total Characters Covered: {} / {}% \
     Total Characters Missed: {} / {}%' .format(total_chars_matched,
                                               round(total_chars_matched/total_chars * 100, 2),
@@ -77,7 +77,7 @@ def _test_assignment_coverage(movie, alignment_fn, assignment_fn):
     lines_missed = 0
     chars_gendered = 0
 
-    inames = get_imdb_gender_mapping(movie.imdb_cast)
+    inames = movie.imdb_cast
     script_to_imdb = defaultdict(list)
     aligned_char_count = 0
     aligned_line_count = 0
@@ -151,7 +151,7 @@ def test_all_assignment_coverage(data, alignment_fn, assignment_fn):
     total_chars = total_chars_matched + total_chars_missed
     total_lines = total_lines_matched + total_lines_missed
 
-    print('ASSIGNMENT TEST: %s assignment with %s alignment' % (assignment_fn.__name__, alignment_fn.__name__))
+    print('ASSIGNMENT COVERAGE TEST: %s assignment with %s alignment' % (assignment_fn.__name__, alignment_fn.__name__))
     print('File assignment successes: {} / {}%  \
            File assignment failures: {} / {}%'.format(total_success,
                                                       round(total_success/total_attempts * 100, 2),
@@ -188,7 +188,7 @@ def _test_ssa_coverage(movie, ssa_dict, check_decade):
     lines_missed = 0
     year = movie.year
     for character in movie.characters:
-        pred = predict_gender_rb_ssa(ssa_dict, character.name, movie_year=year, check_decade=check_decade)
+        pred = predict_gender_rb_ssa(ssa_dict, character.name, mode='hard', movie_year=year, check_decade=check_decade)
         if pred is not None:
             chars_matched += 1
             lines_matched += len(character.line_data)
@@ -233,6 +233,7 @@ def test_all_ssa_coverage(data, check_decade):
                                           round(total_lines_matched/total_lines * 100, 2),
                                           total_lines_missed,
                                           round(total_lines_missed/total_lines * 100, 2)))
+    print('----------------------------')
 
 # -------------------- ACCURACY TESTS --------------------
 PATH_TO_GOLD_LABELS = './data/gold_labels/'

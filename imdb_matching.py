@@ -6,20 +6,6 @@ import difflib
 
 THRESHOLD = 5
 
-# ----------------------- GENERAL UTILITIES -----------------------
-def get_imdb_gender_mapping(imdb_cast):
-    """
-    Processes IMDB character data from file and makes a dictionary
-    mapping from their names to the gender of the actor that
-    portrays them.
-    """
-    char_names = {}
-    for c in imdb_cast:
-        char_name = c[0].lower()
-        gender = c[1].split('(')[-1].strip(')')
-        char_names[char_name] = gender
-    return char_names
-
 # --------------------------- ALIGNMENT ---------------------------
 def in_align(iname, sname):
     """
@@ -54,8 +40,22 @@ def blended_align(iname, sname, threshold=THRESHOLD):
 
 # --------------------------- ASSIGNMENT --------------------------
 
-# TODO(karaschechtman): baseline of "better" alignments
-# (assign alignment with highest quality measured by overlap)
+def baseline_assign(script_to_imdb):
+    """
+    Baseline assignment function that assigns the IMDb
+    character with the highest overlapping character count.
+    """
+    assignments = {}
+    for sname in script_to_imdb:
+        inames = script_to_imdb[sname]
+        best_fit = 0
+        for iname in inames:
+            s = difflib.SequenceMatcher(None, sname, iname)
+            match = s.find_longest_match(0, len(sname), 0, len(iname))
+            if match.size >= best_fit:
+                assignments[sname] = iname
+                best_fit = match.size
+    return assignments
 
 def _hard_backtrack(script_to_imdb, assignments):
     """
@@ -66,7 +66,7 @@ def _hard_backtrack(script_to_imdb, assignments):
         return assignments
 
     # Choose variable to assign according to MRV heuristic.
-    sname = max(script_to_imdb, key=lambda k: len(script_to_imdb[k]))
+    sname = min(script_to_imdb, key=lambda k: len(script_to_imdb[k]))
 
     # Check failure condition.
     if len(script_to_imdb[sname]) == 0:
@@ -120,7 +120,7 @@ def _soft_backtrack(script_to_imdb, assignments):
         return assignments
 
     # Choose variable to assign according to MRV heuristic.
-    sname = max(script_to_imdb, key=lambda k: len(script_to_imdb[k]))
+    sname = min(script_to_imdb, key=lambda k: len(script_to_imdb[k]))
 
     # Order potential assignments according to LCV heuristic.
     # This enforces a soft preference for matching snames
@@ -168,13 +168,11 @@ def predict_gender_imdb(movie, alignment_fn, assignment_fn, max_inames=-1):
     the gender of characters. Returns a dictionary from character
     names to predicted genders.
     """
-    imdb_cast = movie.imdb_cast
     if max_inames > 0 and max_inames < len(imdb_cast):
         imdb_cast = imdb_cast[:max_inames]
-    inames = get_imdb_gender_mapping(imdb_cast)
     script_to_imdb = defaultdict(list)
     for character in movie.characters:
-        for iname in inames:
+        for iname in movie.imdb_cast:
             if alignment_fn(iname, character.name):
                 script_to_imdb[character.name].append(iname)
 
@@ -183,7 +181,7 @@ def predict_gender_imdb(movie, alignment_fn, assignment_fn, max_inames=-1):
     gender_alignments = {}
     if assignment:
         for sname in assignment:
-            gender = inames[assignment[sname]]
+            gender = movie.imdb_cast[assignment[sname]][1]
             if gender == 'M' or gender == 'F':
                 gender_alignments[sname] = gender
     return gender_alignments
