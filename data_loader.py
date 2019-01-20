@@ -1,7 +1,7 @@
 __author__ = 'Kara Schechtman <kws2121@columbia.edu>'
 __date__ = 'Jan 15, 2019'
 
-DATA_PATH = 'data/'
+DATA_PATH = 'data/movies/'
 
 IMDB_KEY = 'IMDB: '
 TITLE_KEY = 'Title: '
