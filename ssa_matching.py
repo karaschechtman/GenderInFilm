@@ -1,14 +1,46 @@
+__author__ = 'Serina Chang <sc3003@columbia.edu>'
+__date__ = 'Jan 20, 2019'
+
+import os
+
+'''SSA-based and rule-based gender prediction for character names.'''
+
+# ----------------------- GENERAL UTILITIES -----------------------
+def char_name_to_tokens(char_name):
+    char_name = char_name.replace('/', ' ')
+    return char_name.lower().split()
+
+# --------------------- RULE-BASED PREDICTION ---------------------
+FEMALE_TERMS = {'ms', 'miss', 'mrs', 'mother', 'mom', 'momma', 'sister',
+                'aunt', 'grandma', 'grandmother', 'lady', 'mistress',
+                'duchess', 'madam', 'madame', 'princess', 'girl', 'woman'
+                'waitress', 'female'}
+MALE_TERMS = {'mr', 'mister', 'father', 'dad', 'brother', 'uncle',
+              'grandpa', 'grandfather', 'master', 'duke', 'prince',
+              'boy', 'man', 'male'}
+
+def predict_gender_rb(char_name):
+    """
+    The simplest gender predictor: checks for gendered terms in the
+    character name, such as 'girl' and 'boy'.
+    """
+    toks = char_name_to_tokens(char_name)
+    for tok in toks:
+        if tok in FEMALE_TERMS:
+            return 1.0
+        elif tok in MALE_TERMS:
+            return 0.0
+    return None
+
+# --------------------- SSA-BASED PREDICTION ---------------------
 PATH_TO_SSA = './data/ssa_names_1880_2017/'
 SSA_MIN = 1880
 SSA_MAX = 2017
-FEMALE_TITLES = {'ms', 'miss', 'mrs', 'mother', 'mom', 'momma', 'sister', 'aunt', 'grandma', 'grandmother',
-                 'lady', 'mistress', 'duchess', 'madam', 'madame', 'princess', 'girl', 'woman'
-                 'waitress'}
-MALE_TITLES = {'mr', 'mister', 'father', 'dad', 'brother', 'uncle', 'grandpa', 'grandfather',
-               'master', 'duke', 'prince', 'boy', 'man'}
 
-# return dict: year -> list of name_scores
 def make_ssa_dict():
+    """
+    Makes a dictionary of year mapped to SSA name_scores.
+    """
     year_to_names = {}
     for fn in os.listdir(PATH_TO_SSA):
         if fn.startswith('yob'):
@@ -19,8 +51,13 @@ def make_ssa_dict():
             year_to_names[year] = name_scores
     return year_to_names
 
-# return dict: name -> score, i.e. num_female / (num_male + num_female)
 def get_name_scores(ssa_fn):
+    """
+    Makes SSA name_scores, i.e. a dictionary of name mapped to score, where score
+    equals the number of times that name was assigned to a female baby divided
+    by the total number of times that name was assigned to a baby of either
+    gender.
+    """
     name_to_counts = {}
     with open(ssa_fn, 'r') as f:
         content = f.readlines()
@@ -40,18 +77,14 @@ def get_name_scores(ssa_fn):
         name_to_counts[name] = score
     return name_to_counts
 
-# fallback if IMDb is missing gender info for this character
-def predict_gender(ssa_dict, char_name, movie_year=None, check_decade=True):
-    char_name = char_name.replace('/', ' ')  # separate into different tokens
-    toks = char_name.lower().split()
-    # first check for obvious gendered titles
-    for tok in toks:
-        if tok in FEMALE_TITLES:
-            return 1.0
-        elif tok in MALE_TITLES:
-            return 0.0
-    # check token by token to see if there are matches with SSA name lists;
-    # favor earlier tokens since name lists are of first names
+def predict_gender_ssa(ssa_dict, char_name, movie_year=None, check_decade=True):
+    """
+    Predicts a character's gender based on SSA name_scores. If check_decade is True,
+    only the years in the decade preceding the movie are checked for name_scores;
+    otherwise, all years are checked. After collecting all name_scores for this name,
+    the name_scores are averaged.
+    """
+    toks = char_name_to_tokens(char_name)
     for tok in toks:
         sum_score = 0
         year_count = 0
@@ -67,7 +100,19 @@ def predict_gender(ssa_dict, char_name, movie_year=None, check_decade=True):
             return sum_score / year_count
     return None
 
+def predict_gender_rb_ssa(ssa_dict, char_name, movie_year=None, check_decade=True):
+    """
+    Predicts gender by first trying rule-based, and if it fails, tries SSA-based.
+    """
+    rb_pred = predict_gender_rb(char_name)
+    if rb_pred is not None:
+        return rb_pred
+    return predict_gender_ssa(ssa_dict, char_name, movie_year=movie_year, check_decade=check_decade)
+
 def test_gender_coverage(ssa_dict, lines):
+    """
+    Tests over all 'C|'-tagged lines how many can be matched to a gender (accuracy not checked here).
+    """
     year = lines[2].strip('Year: ').strip()
     if year == 'None':
         year = None

@@ -29,7 +29,7 @@ class DataLoader(object):
                 filepath = os.path.join(data_dir, filename)
                 with open(filepath, 'r') as file:
                     lines = file.readlines()
-                    _check_metadata_format(lines)
+                    _check_metadata_format(lines, filename)
                     # Get metadata.
                     imdb = _read_field(lines[0])
                     title = _read_field(lines[1])
@@ -66,7 +66,7 @@ def _read_field(line, cast_fn = None, split = False):
     else:
         return field
 
-def _check_metadata_format(lines):
+def _check_metadata_format(lines, filename):
     """
     Helper function to check format of the metadata in Agarwal.
     """
