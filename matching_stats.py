@@ -1,5 +1,6 @@
 from data_loader import DataLoader
 from imdb_matching import *
+from sklearn.metrics import accuracy_score
 from ssa_matching import *
 
 """Statistics for matching."""
@@ -233,17 +234,65 @@ def test_all_ssa_coverage(data, check_decade):
                                           total_lines_missed,
                                           round(total_lines_missed/total_lines * 100, 2)))
 
+# -------------------- ACCURACY TESTS --------------------
+PATH_TO_GOLD_LABELS = './data/gold_labels/'
+
+def parse_annotation_file(filename):
+    char_dict = {}
+    with open(PATH_TO_GOLD_LABELS + filename) as f:
+        title = filename.split(' ALIGNED.txt', 1)[0].strip()
+        # movie = data.get_movie(title)
+        # assert(movie is not None)
+        for line in f.readlines():
+            sname_gen, alignment = line.split(' -> ')
+            sname, gen = sname_gen.split(' (')
+            gen = gen.rstrip(')')
+            alignment = alignment.strip()
+            if alignment.startswith('POSSIBILITIES '):
+                certain = False
+                inames = alignment.strip('POSSIBILITIES ').split(', ')
+            elif alignment == 'N/A':
+                certain = True
+                inames = None
+            elif ', ' in alignment:
+                certain = True
+                inames = alignment.split(', ')
+            else:
+                certain = True
+                inames = alignment
+            char_dict[sname] = (gen, inames, certain)
+    return char_dict
+
+def get_accuracy(gold, pred, only_gender):
+    if only_gender:
+        ordered_snames = sorted(list(gold.keys()))
+        gold_labels = [gender_to_idx(gold[sname][0]) for sname in ordered_snames]
+        pred_labels = [gender_to_idx(pred[sname]) for sname in ordered_snames]
+        return accuracy_score(gold_labels, pred_labels)
+
+def gender_to_idx(gender):
+    if gender == 'UNK':
+        return 0
+    if gender == 'F':
+        return 1
+    if gender == 'M':
+        return 2
+    if gender == 'BOTH':
+        return 3
+    return -1
 
 if __name__ == "__main__":
-    data = DataLoader(verbose=False)
-    test_all_alignment_coverage(data, in_align)
-    test_all_alignment_coverage(data, threshold_align)
-    test_all_alignment_coverage(data, blended_align)
-    test_all_assignment_coverage(data, in_align, soft_backtrack)
-    test_all_assignment_coverage(data, threshold_align, soft_backtrack)
-    test_all_assignment_coverage(data, blended_align, soft_backtrack)
-    test_all_assignment_coverage(data, in_align, hard_backtrack)
-    test_all_assignment_coverage(data, threshold_align, hard_backtrack)
-    test_all_assignment_coverage(data, blended_align, hard_backtrack)
-    test_all_ssa_coverage(data, check_decade=True)
-    test_all_ssa_coverage(data, check_decade=False)
+    # data = DataLoader(verbose=False)
+    # test_all_alignment_coverage(data, in_align)
+    # test_all_alignment_coverage(data, threshold_align)
+    # test_all_alignment_coverage(data, blended_align)
+    # test_all_assignment_coverage(data, in_align, soft_backtrack)
+    # test_all_assignment_coverage(data, threshold_align, soft_backtrack)
+    # test_all_assignment_coverage(data, blended_align, soft_backtrack)
+    # test_all_assignment_coverage(data, in_align, hard_backtrack)
+    # test_all_assignment_coverage(data, threshold_align, hard_backtrack)
+    # test_all_assignment_coverage(data, blended_align, hard_backtrack)
+    # test_all_ssa_coverage(data, check_decade=True)
+    # test_all_ssa_coverage(data, check_decade=False)
+    gold = parse_annotation_file('10 Things I Hate About You ALIGNED.txt')
+
