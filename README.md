@@ -1,5 +1,5 @@
 # GenderInFilm
-Simple Python interface for analyzing data about gender in film. Data from Agarwal et. al (2015) and the Internet Movie Database (IMDb). Bechdel scores are from bechdeltest.com.
+Python scripts for analyzing data about gender in film. Data from Agarwal et. al (2015) and the Internet Movie Database (IMDb). Bechdel scores are from bechdeltest.com. For NYCDH 2019 conference workshop.
 
 # Files
 ## ./
