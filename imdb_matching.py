@@ -161,14 +161,17 @@ def soft_backtrack(script_to_imdb):
         return False
 
 # ---------------------------- PREDICT ----------------------------
-def predict_gender_imdb(movie, alignment_fn, assignment_fn):
+def predict_gender_imdb(movie, alignment_fn, assignment_fn, max_inames=None):
     """
     Given a movie, a function to align IMDB data to the characters,
     and a function to choose from potential aligned names, predict
     the gender of characters. Returns a dictionary from character
     names to predicted genders.
     """
-    inames = get_imdb_gender_mapping(movie.imdb_cast)
+    imdb_cast = movie.imdb_cast
+    if max_inames is not None and max_inames < len(imdb_cast):
+        imdb_cast = imdb_cast[:max_inames]
+    inames = get_imdb_gender_mapping(imdb_cast)
     script_to_imdb = defaultdict(list)
     for character in movie.characters:
         for iname in inames:

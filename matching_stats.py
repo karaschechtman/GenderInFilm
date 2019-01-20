@@ -1,11 +1,13 @@
 from data_loader import DataLoader
 from imdb_matching import *
+from ssa_matching import *
 
 """Statistics for matching."""
 
+# -------------------- COVERAGE TESTS --------------------
 def _test_alignment_coverage(movie, alignment_fn):
     """
-    Helper for test_alignment_coverage to count matches
+    Helper for test_all_alignment_coverage to count matches
     in an individual script.
     """
     inames = [c[0].lower() for c in movie.imdb_cast]
@@ -122,7 +124,7 @@ def test_all_assignment_coverage(data, alignment_fn, assignment_fn):
     with an IMDb match.
     3. Number of lines successfully assigned - lines spoken
     by characters with an IMDB match.
-    4. Number of characters successfully gendered -  characters
+    4. Number of characters successfully gendered - characters
     with an IMDb match that has a gender.
     """
     total_success = 0
@@ -174,8 +176,66 @@ def test_all_assignment_coverage(data, alignment_fn, assignment_fn):
 
     print('----------------------------')
 
+def _test_ssa_coverage(movie, ssa_dict, check_decade):
+    """
+    Helper for test_all_ssa_coverage to count coverage
+    in an individual script.
+    """
+    chars_matched = 0
+    chars_missed = 0
+    lines_matched = 0
+    lines_missed = 0
+    year = movie.year
+    for character in movie.characters:
+        pred = predict_gender_rb_ssa(ssa_dict, character.name, movie_year=year, check_decade=check_decade)
+        if pred is not None:
+            chars_matched += 1
+            lines_matched += len(character.line_data)
+        else:
+            chars_missed += 1
+            lines_missed += len(character.line_data)
+    return chars_matched, chars_missed, lines_matched, lines_missed
+
+def test_all_ssa_coverage(data, check_decade):
+    """
+    Checks coverage for the SSA-RB gender prediction function.
+    Provides two statistics:
+    1. Characters covered - a script character is covered
+    if its gender can be predicted.
+    2. Lines covered - a line is covered if it is spoken
+    by a character whose gender can be predicted.
+    """
+    ssa_dict = make_ssa_dict()
+    total_chars_matched = 0
+    total_lines_matched = 0
+    total_chars_missed = 0
+    total_lines_missed = 0
+    for movie in data.movies:
+        chars_matched, chars_missed, lines_matched, lines_missed = (
+                    _test_ssa_coverage(movie, ssa_dict, check_decade))
+        total_chars_matched += chars_matched
+        total_chars_missed += chars_missed
+        total_lines_matched += lines_matched
+        total_lines_missed += lines_missed
+
+    total_chars = total_chars_matched + total_chars_missed
+    total_lines = total_lines_matched + total_lines_missed
+
+    print('SSA COVERAGE TEST: check_decade = {}'.format(check_decade))
+    print('Total Characters Covered: {} / {}% \
+    Total Characters Missed: {} / {}%' .format(total_chars_matched,
+                                              round(total_chars_matched/total_chars * 100, 2),
+                                              total_chars_missed,
+                                              round(total_chars_missed/total_chars * 100, 2)))
+    print('Total Lines Covered: {} / {}% \
+    Total Lines Missed: {} / {}%' .format(total_lines_matched,
+                                          round(total_lines_matched/total_lines * 100, 2),
+                                          total_lines_missed,
+                                          round(total_lines_missed/total_lines * 100, 2)))
+
+
 if __name__ == "__main__":
-    data = DataLoader()
+    data = DataLoader(verbose=False)
     test_all_alignment_coverage(data, in_align)
     test_all_alignment_coverage(data, threshold_align)
     test_all_alignment_coverage(data, blended_align)
@@ -185,3 +245,5 @@ if __name__ == "__main__":
     test_all_assignment_coverage(data, in_align, hard_backtrack)
     test_all_assignment_coverage(data, threshold_align, hard_backtrack)
     test_all_assignment_coverage(data, blended_align, hard_backtrack)
+    test_all_ssa_coverage(data, check_decade=True)
+    test_all_ssa_coverage(data, check_decade=False)

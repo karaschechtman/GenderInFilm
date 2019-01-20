@@ -20,7 +20,8 @@ class DataLoader(object):
     """
     Loads metadata and data of movie files into Movie objects.
     """
-    def __init__(self):
+    def __init__(self, verbose=True):
+        print('Initializing DataLoader...')
         self.movies = []
         data_dir = os.path.join(os.getcwd(), DATA_PATH)
 
@@ -33,7 +34,8 @@ class DataLoader(object):
                     # Get metadata.
                     imdb = _read_field(lines[0])
                     title = _read_field(lines[1])
-                    print('Loading %s...' % (title) )
+                    if verbose:
+                        print('Loading %s...' % (title) )
                     year = _read_field(lines[2], cast_fn=int)
                     genre = _read_field(lines[3], split=True)
                     director = _read_field(lines[4])
