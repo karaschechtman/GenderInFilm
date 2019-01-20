@@ -22,7 +22,7 @@ class DataLoader(object):
     """
     def __init__(self, verbose=True):
         print('Initializing DataLoader...')
-        self.movies = []
+        self.movies = {}
         data_dir = os.path.join(os.getcwd(), DATA_PATH)
 
         for filename in os.listdir(data_dir):
@@ -42,17 +42,23 @@ class DataLoader(object):
                     rating = _read_field(lines[5], cast_fn=float)
                     bechdel_score = _read_field(lines[6], cast_fn=int)
                     imdb_cast_list = _read_field(lines[7], split=True)
-                    imdb_cast = imdb_cast_list if not imdb_cast_list \
-                                else [tuple(entry.split(' | ')) for entry in imdb_cast_list]
+                    imdb_cast = _process_imdb_cast(imdb_cast_list)
                     characters = _extract_characters(lines[9:])
 
                 # Create movie object and save.
-                self.movies.append(Movie(imdb, title, year,
-                                         genre, director, rating,
-                                         bechdel_score, imdb_cast,
-                                         characters))
+                self.movies[title] = Movie(imdb, title, year,
+                                           genre, director, rating,
+                                           bechdel_score, imdb_cast,
+                                           characters)
         print('All data loaded!')
         print('----------------------------')
+
+    def get_movie(self, title):
+        """
+        Get a mutable Movie object with a given title.
+        Raises a KeyError if the movie does not exist.
+        """
+        return self.movies[title]
 
 def _read_field(line, cast_fn = None, split = False):
     """
@@ -84,6 +90,24 @@ def _check_metadata_format(lines, filename):
 
        raise Exception(filename +
                        ' metadata formatted incorrectly.')
+
+def _process_imdb_cast(imdb_cast_list):
+    """
+    Processes IMDB character data from file and makes a dictionary
+    mapping from their names to the actor names and gender of the
+    actor that portrays them in a tuple.
+    """
+    if imdb_cast_list:
+        imdb_cast = {}
+        for entry in imdb_cast_list:
+            c = entry.split(' | ')
+            char_name = c[0].lower()
+            actor_name = c[1].split('(')[0]
+            gender = c[1].split('(')[-1].strip(')')
+            imdb_cast[char_name] = (actor_name, gender)
+        return imdb_cast
+    else:
+        return None
 
 def _extract_characters(script):
     """

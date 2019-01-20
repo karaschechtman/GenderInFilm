@@ -6,20 +6,6 @@ import difflib
 
 THRESHOLD = 5
 
-# ----------------------- GENERAL UTILITIES -----------------------
-def get_imdb_gender_mapping(imdb_cast):
-    """
-    Processes IMDB character data from file and makes a dictionary
-    mapping from their names to the gender of the actor that
-    portrays them.
-    """
-    char_names = {}
-    for c in imdb_cast:
-        char_name = c[0].lower()
-        gender = c[1].split('(')[-1].strip(')')
-        char_names[char_name] = gender
-    return char_names
-
 # --------------------------- ALIGNMENT ---------------------------
 def in_align(iname, sname):
     """
@@ -182,13 +168,11 @@ def predict_gender_imdb(movie, alignment_fn, assignment_fn, max_inames=-1):
     the gender of characters. Returns a dictionary from character
     names to predicted genders.
     """
-    imdb_cast = movie.imdb_cast
     if max_inames > 0 and max_inames < len(imdb_cast):
         imdb_cast = imdb_cast[:max_inames]
-    inames = get_imdb_gender_mapping(imdb_cast)
     script_to_imdb = defaultdict(list)
     for character in movie.characters:
-        for iname in inames:
+        for iname in movie.imdb_cast:
             if alignment_fn(iname, character.name):
                 script_to_imdb[character.name].append(iname)
 
@@ -197,7 +181,7 @@ def predict_gender_imdb(movie, alignment_fn, assignment_fn, max_inames=-1):
     gender_alignments = {}
     if assignment:
         for sname in assignment:
-            gender = inames[assignment[sname]]
+            gender = movie.imdb_cast[assignment[sname]][1]
             if gender == 'M' or gender == 'F':
                 gender_alignments[sname] = gender
     return gender_alignments
