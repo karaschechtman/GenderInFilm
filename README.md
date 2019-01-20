@@ -3,6 +3,7 @@ Simple Python interface for analyzing data about gender in film. Data from Agarw
 
 # Files
 ## ./
+- `workshop.py`: where to write the exercises for this workshop
 - `data_loader.py`: contains DataLoader object to load information about movies from data/to memory as Movie objects.
 - `movie.py`: Object storing information about a particular movie.
 - `character.py`: Object storing information about a particular character.
