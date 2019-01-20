@@ -1,6 +1,7 @@
 from bs4 import BeautifulSoup
 import json
 import os
+import pickle
 import requests
 
 '''Parsing from screenplay'''
@@ -71,15 +72,15 @@ def compute_char_match(s_char_names, i_char_names):
                 num_matched += 1
     return num_matched
 
-def extract_imdb_id(soup):
-    id_wrapper = soup.find('meta', attrs={'property':'pageId'})
+def extract_imdb_id(main_page):
+    id_wrapper = main_page.find('meta', attrs={'property':'pageId'})
     if id_wrapper is not None:
         return id_wrapper['content'].strip('tt')
     return None
 
-def extract_imdb_headings(soup):
+def extract_imdb_headings(main_page):
     title, year, genres = None, None, set()
-    wrapper = soup.find('div', attrs={'class':'title_wrapper'})
+    wrapper = main_page.find('div', attrs={'class':'title_wrapper'})
     if wrapper is not None:
         heading = wrapper.find('h1')
         if heading is not None:
@@ -95,46 +96,48 @@ def extract_imdb_headings(soup):
                     genres.add(l.text)
     return title, year, genres
 
-def extract_imdb_rating(soup):
-    rating_wrap = soup.find('span', attrs={'itemprop':'ratingValue'})
+def extract_imdb_rating(main_page):
+    rating_wrap = main_page.find('span', attrs={'itemprop':'ratingValue'})
     if rating_wrap is not None:
         return float(rating_wrap.text)
     return None
 
-# returns a list of tuples: < director name, gender >
-def extract_imdb_dir_tuples(soup):
-    tuples = []
-    found_names = set()
-    crew_list = soup.find_all('div', attrs={'class':'credit_summary_item'})
-    for item in crew_list:
-        if 'Director' in item.text:
-            links = item.find_all('a')
-            for l in links:
-                if 'more credits' not in l.text:
-                    name = l.text.strip()
-                    found_names.add(name)
-                    bio_url = IMDB_DOMAIN + l['href']
-                    bio_soup = BeautifulSoup(requests.get(bio_url).content, 'html.parser')
-                    gender = predict_gender_from_bio(bio_soup)
-                    tuples.append((name, gender))
-                else:
-                    imdb_id = extract_imdb_id(soup)
-                    creds_url = '{}/title/tt{}/{}'.format(IMDB_DOMAIN, imdb_id, l['href'])
-                    creds_soup = BeautifulSoup(requests.get(creds_url).content, 'html.parser')
-                    headers = creds_soup.find_all('h4', attrs={'class':'dataHeaderWithBorder'})
-                    tables = creds_soup.find_all('table', attrs={'class':'simpleTable simpleCreditsTable'})
-                    for h, t in zip(headers, tables):
-                        if 'Directed by' in h.text:
-                            for name_item in t.find_all('td', attrs={'class':'name'}):
-                                name = name_item.text.strip()
-                                if name not in found_names:
-                                    found_names.add(name)
-                                    bio_url = IMDB_DOMAIN + name_item.find('a')['href']
-                                    bio_soup = BeautifulSoup(requests.get(bio_url).content, 'html.parser')
-                                    gender = predict_gender_from_bio(bio_soup)
-                                    tuples.append((name, gender))
-                            break
-    return tuples
+def make_full_credits_url(imdb_id):
+    return '{}/title/tt{}/fullcredits'.format(IMDB_DOMAIN, imdb_id)
+
+# director tuples: < director name, director gender >
+# cast tuples: < character name, actor name, actor gender >
+def extract_credits(credits_page):
+    dir_tuples = []
+    char_tuples = []
+    headers = credits_page.find_all('h4', attrs={'class':'dataHeaderWithBorder'})
+    tables = credits_page.find_all('table', attrs={'class':'simpleTable simpleCreditsTable'})
+    for h, t in zip(headers, tables):
+        if 'Directed by' in h.text:
+            for name_item in t.find_all('td', attrs={'class':'name'}):
+                name = name_item.text.strip()
+                bio_url = IMDB_DOMAIN + name_item.find('a')['href']
+                bio_soup = BeautifulSoup(requests.get(bio_url).content, 'html.parser')
+                gender = predict_gender_from_bio(bio_soup)
+                dir_tuples.append((name, gender))
+            break
+    cast_table = credits_page.find('table', attrs={'class':'cast_list'})
+    if cast_table is not None:
+        for row in cast_table.find_all('tr'):
+            if row.has_attr('class') and row['class'] != 'classlist_label':
+                act_name, char_name = row.text.split('...')
+                act_name = act_name.strip()
+                char_name = clean_char_name_text(char_name)
+                gender = None
+                photo = row.find('td', attrs={'class':'primary_photo'})
+                if photo is not None:
+                    link = photo.find('a')
+                    if link is not None:
+                        bio_url = IMDB_DOMAIN + link['href']
+                        bio_soup = BeautifulSoup(requests.get(bio_url).content, 'html.parser')
+                        gender = predict_gender_from_bio(bio_soup)
+                char_tuples.append((char_name, act_name, gender))
+    return dir_tuples, char_tuples
 
 # returns list of tuples: < character name, actor name, actor gender >
 def extract_imdb_char_tuples(soup):
@@ -193,32 +196,46 @@ def make_bechdel_dict():
 
 '''Write to file'''
 PATH_TO_SCREENPLAYS = './data/agarwal_screenplays/'
-PATH_TO_DATA = './data/data_loader_txt/'
+PATH_TO_SKIPPED = './data/skipped.pkl'
+PATH_TO_DATA = './data/data_with_screenplays/'
 
 def convert_screenplays_to_dl_files(continue_work=True, max_files=None):
     screenplay_files = os.listdir(PATH_TO_SCREENPLAYS)
     if continue_work:
-        already_done = len(os.listdir(PATH_TO_DATA))
-        print('Already finished {} screenplays'.format(already_done))
-        screenplay_files = screenplay_files[already_done:]
+        skipped = pickle.load(open(PATH_TO_SKIPPED, 'rb'))
+        processed_before = len(os.listdir(PATH_TO_DATA)) + len(skipped)
+        print('Processed {} screenplays before'.format(processed_before))
+        screenplay_files = screenplay_files[processed_before:]
+    else:
+        skipped = set()
     if max_files is not None and len(screenplay_files) > max_files:
         screenplay_files = screenplay_files[:max_files]
     print('Processing {} screenplays...'.format(len(screenplay_files)))
     bechdel_dict = make_bechdel_dict()
-    for fn in screenplay_files:
-        with open(PATH_TO_SCREENPLAYS + fn, 'r') as s_file:
+    for s_fn in screenplay_files:
+        with open(PATH_TO_SCREENPLAYS + s_fn, 'r') as s_file:
             try:
                 s_lines = s_file.readlines()
                 s_title, s_char_names = extract_sp_title_and_char_names(s_lines)
-                if len(s_title) > 0 and len(s_char_names) > 0:
+                if len(s_title) == 0:
+                    print('Missing title for', s_fn)
+                    skipped.add(s_fn)
+                elif len(s_char_names) == 0:
+                    print('Missing character names for', s_title.upper())
+                    skipped.add(s_fn)
+                else:
                     soup = find_imdb_match(s_title, s_char_names)
-                    if soup is not None:
-                        print('Making DataLoader file for {}...'.format(s_title.upper()))
+                    if soup is None:
+                        print('Could not find IMDb match for', s_title.upper())
+                        skipped.add(s_fn)
+                    else:
+                        print('Success: making DataLoader file for', s_title.upper())
                         ID = extract_imdb_id(soup)
                         title, year, genres = extract_imdb_headings(soup)
                         rating = extract_imdb_rating(soup)
-                        dir_tuples = extract_imdb_dir_tuples(soup)
-                        char_tuples = extract_imdb_char_tuples(soup)  # character name, actor name, actor gender
+                        credits_url = make_full_credits_url(ID)
+                        credits_page = BeautifulSoup(requests.get(credits_url).content, 'html.parser')
+                        dir_tuples, char_tuples = extract_credits(credits_page)
                         bechdel_score = bechdel_dict.get(ID)
                         metadata = format_metadata(ID, title, year, genres, rating, dir_tuples, char_tuples, bechdel_score)
                         new_fn = PATH_TO_DATA + '{}___{}.txt'.format('_'.join(title.split()), year)
@@ -228,7 +245,10 @@ def convert_screenplays_to_dl_files(continue_work=True, max_files=None):
                             for line in s_lines:
                                 new_f.write(line)
             except ValueError:
-                print(fn)
+                print('ValueError:', s_fn)
+                skipped.add(s_fn)
+            pickle.dump(skipped, open(PATH_TO_SKIPPED, 'wb'))
+    print('Progress: {} successful, {} skipped'.format(len(os.listdir(PATH_TO_DATA)), len(skipped)))
 
 def format_metadata(ID, title, year, genres, rating, dir_tuples, char_tuples, bechdel_score):
     genres = ', '.join(sorted(list(genres)))  # sort alphabetically
@@ -250,21 +270,23 @@ def format_metadata(ID, title, year, genres, rating, dir_tuples, char_tuples, be
         ID, title, year, genres, dir_str, rating, bechdel_score, char_str)
 
 def demo(imdb_movie_url, bechdel_dict):
-    soup = BeautifulSoup(requests.get(imdb_movie_url).content, 'html.parser')
-    ID = extract_imdb_id(soup)
-    title, year, genres = extract_imdb_headings(soup)
-    rating = extract_imdb_rating(soup)
-    dir_tuples = extract_imdb_dir_tuples(soup)
-    char_tuples = extract_imdb_char_tuples(soup)
+    main_page = BeautifulSoup(requests.get(imdb_movie_url).content, 'html.parser')
+    ID = extract_imdb_id(main_page)
+    title, year, genres = extract_imdb_headings(main_page)
+    rating = extract_imdb_rating(main_page)
+    credits_url = make_full_credits_url(ID)
+    print(credits_url)
+    credits_page = BeautifulSoup(requests.get(credits_url).content, 'html.parser')
+    dir_tuples, char_tuples = extract_credits(credits_page)
     bechdel_score = bechdel_dict.get(ID)
     metadata = format_metadata(ID, title, year, genres, rating, dir_tuples, char_tuples, bechdel_score)
     print(metadata)
 
 if __name__ == "__main__":
-    bechdel_dict = make_bechdel_dict()
-    carol_url = 'https://www.imdb.com/title/tt2402927/'
-    bob_url = 'https://www.imdb.com/title/tt0103241/'  # has multiname characters
-    thelma_and_louise_url = 'https://www.imdb.com/title/tt0103074/'  # has commas in char names
-    four_rooms_url = 'https://www.imdb.com/title/tt0113101/'  # has multiple directors
-    demo(thelma_and_louise_url, bechdel_dict)
-    # convert_screenplays_to_dl_files(continue_work=True)
+    # bechdel_dict = make_bechdel_dict()
+    # carol_url = 'https://www.imdb.com/title/tt2402927/'
+    # bob_url = 'https://www.imdb.com/title/tt0103241/'  # has multiname characters
+    # thelma_and_louise_url = 'https://www.imdb.com/title/tt0103074/'  # has commas in char names
+    # four_rooms_url = 'https://www.imdb.com/title/tt0113101/'  # has multiple directors
+    # demo(carol_url, bechdel_dict)
+    convert_screenplays_to_dl_files(continue_work=True)
