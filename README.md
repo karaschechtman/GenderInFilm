@@ -17,7 +17,7 @@ Simple Python interface for analyzing data about gender in film. Data from Agarw
 
 
 # Data
-Data should be downloaded from Google Drive and the ZIP file extracted in `./` such that there is a directory `./data`
+Data should be downloaded from Google Drive via the bit.ly link provided in the presentation and the ZIP file extracted in `./` such that there is a directory `./data/`.
 
 ## Metadata format
 - IMBD: `<imdb id, str>`
