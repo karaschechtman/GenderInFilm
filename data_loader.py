@@ -1,7 +1,7 @@
 __author__ = 'Kara Schechtman <kws2121@columbia.edu>'
 __date__ = 'Jan 15, 2019'
 
-DATA_PATH = 'data/'
+DATA_PATH = 'data/movies/'
 
 IMDB_KEY = 'IMDB: '
 TITLE_KEY = 'Title: '
@@ -14,6 +14,7 @@ IMDB_CAST_KEY = 'IMDB Cast: '
 
 import os
 from character import Character
+from collections import OrderedDict
 from movie import Movie
 
 class DataLoader(object):
@@ -100,7 +101,7 @@ def _process_imdb_cast(imdb_cast_list):
     the character key is character (actor last name).
     """
     if imdb_cast_list:
-        imdb_cast = {}
+        imdb_cast = OrderedDict()
         dup_character_names = set()
         for entry in imdb_cast_list:
             c = entry.split(' | ')
@@ -109,10 +110,9 @@ def _process_imdb_cast(imdb_cast_list):
             gender = c[1].split('(')[-1].strip(')')
             if char_name in imdb_cast: # first duplicate character
                 # Handle the old duplicate
-                old_dup_char = imdb_cast[char_name]
-                imdb_cast[char_name + ' (' + old_dup_char[0] +')'] = old_dup_char
-                del imdb_cast[char_name]
-                imdb_cast[char_name + ' (' + actor_name + ')'] = (actor_name, gender)
+                actor_name = imdb_cast[char_name][0]
+                paren_name = char_name + ' (' + actor_name +')'
+                __change_key(imdb_cast, char_name, paren_name)
                 dup_character_names.add(char_name)
             elif char_name in dup_character_names: # duplicate caught before
                 imdb_cast[char_name + ' (' + actor_name + ')'] = (actor_name, gender)
@@ -121,6 +121,12 @@ def _process_imdb_cast(imdb_cast_list):
         return imdb_cast
     else:
         return None
+
+# From stackoverflow: https://bit.ly/2Cznq8R
+def __change_key(dict, old, new):
+    for _ in range(len(dict)):
+        k, v = dict.popitem(False)
+        dict[new if old == k else k] = v
 
 def _extract_characters(script):
     """

@@ -4,7 +4,7 @@ __date__ = 'Jan 20, 2019'
 import sys
 sys.path.append('..')
 
-DATA_PATH = '../data'
+DATA_PATH = '../data/movies/'
 AGARWAL_DIR = 'agarwal_with_metadata'
 
 IMDB_KEY = 'IMDB: '
