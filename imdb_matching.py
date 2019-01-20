@@ -2,35 +2,34 @@ import os
 
 '''Contains scripts to match gender labels to scripts.'''
 
-PATH_TO_DATA = './data/'
 THRESHOLD = 5
 
+from character import Character
 from collections import defaultdict
+from data_loader import DataLoader
+
 import difflib
 
 # TODO(karaschechtman): rewrite class using data_loader.
 
 # ----------------------- GENERAL UTILITIES -----------------------
-def _get_imdb_names(cast):
+def _get_imdb_names(imdb_cast):
     """
     Processes IMDB cahracter data from file and makes a list
     of their names.
     """
-    cast_list = cast.strip('IMDB Cast: ').strip().split(', ')
-    return [c.split(' | ', 1)[0].lower() for c in cast_list]
+    return [c[0].lower() for c in imdb_cast]
 
-def _get_imdb_gender_mapping(cast):
+def _get_imdb_gender_mapping(imdb_cast):
     """
     Processes IMDB character data from file and makes a dictionary
     mapping from their names to the gender of the actor that
     portrays them.
     """
-    cast_list = cast.strip('IMDB Cast: ').strip().split(', ')
     char_names = {}
-    for c in cast_list:
-        char_to_actor = c.split(' | ', 1)
-        char_name = char_to_actor[0].lower()
-        gender = char_to_actor[1].split('(')[-1].strip(')')
+    for c in imdb_cast:
+        char_name = c[0].lower()
+        gender = c[1].split('(')[-1].strip(')')
         char_names[char_name] = gender
     return char_names
 
@@ -175,63 +174,53 @@ def soft_backtrack(script_to_imdb):
         return False
 
 # ---------------------------- SIMPLE RUN ----------------------------
-def imdb_gender_predict(alignment_fn, assignment_fn):
+def imdb_gender_predict(movie, alignment_fn, assignment_fn):
+    """
+    Given a movie, a function to align IMDB data to the characters,
+    and a function to choose from potential aligned names, predict
+    the gender of characters. Returns a dictionary from character
+    names to predicted genders.
+    """
+    inames = _get_imdb_gender_mapping(movie.imdb_cast)
+    script_to_imdb = defaultdict(list)
+    for character in movie.characters:
+        for iname in inames:
+            if alignment_fn(iname, character.name):
+                script_to_imdb[sname].append(iname)
+
+    # Match genders.
+    assignment = assignment_fn(script_to_imdb)
     gender_alignments = {}
-    for fn in os.listdir(PATH_TO_DATA):
-        title = fname.split('.',1)[0]
-        if fn.endswith('.txt'):
-            with open(PATH_TO_DATA + fn, 'r') as f:
-                # Run assignment.
-                lines = f.readlines()
-                cast = lines[7]
-                inames = _get_imdb_gender_mapping(cast)
-                script_to_imdb = defaultdict(list)
-                for line in lines[9:]:
-                    data = line.split(':')
-                    sname = data[0]
-                    for iname in inames:
-                        if alignment_fn(iname, sname):
-                            script_to_imdb[sname].append(iname)
-
-                # Match genders.
-                assignment = assignment_fn(script_to_imdb)
-                sname_gender = {}
-                if assignment:
-                    for sname in assignment:
-                        gender = inames[assignment[sname]]
-                        if gender == 'M' or gender == 'F':
-                            sname_gender[sname] = gender
-
-                gender_alignments[title] = sname_gender
-
-        return gender_alignments
+    if assignment:
+        for sname in assignment:
+            gender = inames[assignment[sname]]
+            if gender == 'M' or gender == 'F':
+                gender_alignments[sname] = gender
+    return gender_alignments
 
 # ---------------------------- TESTING ----------------------------
-def _count_matches_per_script(lines, alignment_fn):
+def _test_alignment_coverage(movie, alignment_fn):
     """
     Helper for test_alignment_coverage to count matches
     in an individual script.
     """
-    cast = lines[7]
-    inames = _get_imdb_names(cast)
+    inames = _get_imdb_names(movie.imdb_cast)
     chars_matched = 0
     chars_missed = 0
     lines_matched = 0
     lines_missed = 0
 
-    for line in lines[9:]:
-        char_data = line.split(':')
-        sname = char_data[0]
-        if any([alignment_fn(iname, sname) for iname in inames]):
+    for character in movie.characters:
+        if any([alignment_fn(iname, character.name) for iname in inames]):
             chars_matched += 1
-            lines_matched += len(char_data[1].split(', '))
+            lines_matched += len(character.line_data)
         else:
             chars_missed += 1
-            lines_missed += len(char_data[1].split(', '))
+            lines_missed += len(character.line_data)
 
     return chars_matched, chars_missed, lines_matched, lines_missed
 
-def test_alignment_coverage(alignment_fn):
+def test_all_alignment_coverage(data, alignment_fn):
     """
     Checks coverage for an alignment function.
     Provides two statistics
@@ -244,16 +233,13 @@ def test_alignment_coverage(alignment_fn):
     total_lines_matched = 0
     total_chars_missed = 0
     total_lines_missed = 0
-    for fn in os.listdir(PATH_TO_DATA):
-        total_num_files = 0
-        if fn.endswith('.txt'):
-            with open(PATH_TO_DATA + fn, 'r') as f:
-                chars_matched, chars_missed, lines_matched, lines_missed = (
-                    _count_matches_per_script(f.readlines(), alignment_fn))
-                total_chars_matched += chars_matched
-                total_chars_missed += chars_missed
-                total_lines_matched += lines_matched
-                total_lines_missed += lines_missed
+    for movie in data.movies:
+        chars_matched, chars_missed, lines_matched, lines_missed = (
+                    _test_alignment_coverage(movie, alignment_fn))
+        total_chars_matched += chars_matched
+        total_chars_missed += chars_missed
+        total_lines_matched += lines_matched
+        total_lines_missed += lines_missed
 
     total_chars = total_chars_matched + total_chars_missed
     total_lines = total_lines_matched + total_lines_missed
@@ -271,7 +257,51 @@ def test_alignment_coverage(alignment_fn):
                                           round(total_lines_missed/total_lines * 100, 2)))
     print('----------------------------')
 
-def test_assignment_coverage(assignment_fn, alignment_fn):
+def _test_assignment_coverage(movie, alignment_fn, assignment_fn):
+    success = 0
+    failure = 0
+    chars_matched = 0
+    chars_missed = 0
+    lines_matched = 0
+    lines_missed = 0
+    chars_gendered = 0
+
+    inames = _get_imdb_gender_mapping(movie.imdb_cast)
+    script_to_imdb = defaultdict(list)
+    aligned_char_count = 0
+    aligned_line_count = 0
+    # Align script characters to possible IMDb characters.
+    for character in movie.characters:
+        for iname in inames:
+            if alignment_fn(iname, character.name):
+                script_to_imdb[character.name].append(iname)
+        if character.name not in script_to_imdb.keys():
+            chars_missed += 1 # Record lines and character as unmatched.
+            lines_missed += len(character.line_data)
+        else:
+            aligned_line_count += len(character.line_data) # Store for later processing.
+            aligned_char_count += 1
+
+    # Check final assignments and calculate final numbers.
+    assignment = assignment_fn(script_to_imdb)
+    if assignment:
+        for sname in assignment:
+            gender = inames[assignment[sname]]
+            if gender == 'M' or gender == 'F':
+                chars_gendered += 1
+        success += 1
+        chars_matched += aligned_char_count
+        lines_matched += aligned_line_count
+
+    else:
+        failure += 1
+        chars_missed += aligned_char_count
+        lines_missed += aligned_line_count
+
+    return success, failure, chars_matched, chars_missed, \
+           lines_matched, lines_missed, chars_gendered
+
+def test_all_assignment_coverage(data, alignment_fn, assignment_fn):
     """
     Tests coverage of assignments from alignments.
     Provides four statistics:
@@ -295,46 +325,16 @@ def test_assignment_coverage(assignment_fn, alignment_fn):
     total_lines_missed = 0
     total_chars_gendered = 0
 
-    for fn in os.listdir(PATH_TO_DATA):
-        if fn.endswith('.txt'):
-            with open(PATH_TO_DATA + fn, 'r') as f:
-                lines = f.readlines()
-                cast = lines[7]
-                inames = _get_imdb_gender_mapping(cast)
-                script_to_imdb = defaultdict(list)
-                aligned_char_count = 0
-                aligned_line_count = 0
-                for line in lines[9:]:
-                    # Align script characters to possible
-                    # IMDb characters.
-                    data = line.split(':')
-                    sname = data[0]
-                    for iname in inames:
-                        if alignment_fn(iname, sname):
-                            script_to_imdb[sname].append(iname)
-
-                    # Store statistics for that name.
-                    if sname not in script_to_imdb.keys():
-                        total_chars_missed += 1 # Record lines and character as unmatched.
-                        total_lines_missed += len(data[1].split(', '))
-                    else:
-                        aligned_line_count += len(data[1].split(', ')) # Store for later processing.
-                        aligned_char_count += 1
-
-                assignment = assignment_fn(script_to_imdb)
-                if assignment:
-                    for sname in assignment:
-                        gender = inames[assignment[sname]]
-                        if gender == 'M' or gender == 'F':
-                            total_chars_gendered += 1
-                    total_success += 1
-                    total_chars_matched += aligned_char_count
-                    total_lines_matched += aligned_line_count
-
-                else:
-                    total_failure += 1
-                    total_chars_missed += aligned_char_count
-                    total_lines_missed += aligned_line_count
+    for movie in data.movies:
+        success, failure, chars_matched, chars_missed, lines_matched, lines_missed, chars_gendered = (
+                    _test_assignment_coverage(movie, alignment_fn, assignment_fn))
+        total_success += success
+        total_failure += failure
+        total_chars_matched += chars_matched
+        total_chars_missed += chars_missed
+        total_lines_matched += lines_matched
+        total_lines_missed += lines_missed
+        total_chars_gendered += chars_gendered
 
     total_attempts = total_success + total_failure
     total_chars = total_chars_matched + total_chars_missed
@@ -367,12 +367,13 @@ def test_assignment_coverage(assignment_fn, alignment_fn):
     print('----------------------------')
 
 if __name__ == "__main__":
-    test_alignment_coverage(in_align)
-    test_alignment_coverage(threshold_align)
-    test_alignment_coverage(blended_align)
-    test_assignment_coverage(soft_backtrack, in_align)
-    test_assignment_coverage(soft_backtrack, threshold_align)
-    test_assignment_coverage(soft_backtrack, blended_align)
-    test_assignment_coverage(hard_backtrack, in_align)
-    test_assignment_coverage(hard_backtrack, threshold_align)
-    test_assignment_coverage(hard_backtrack, blended_align)
+    data = DataLoader()
+    test_all_alignment_coverage(data, in_align)
+    test_all_alignment_coverage(data, threshold_align)
+    test_all_alignment_coverage(data, blended_align)
+    test_all_assignment_coverage(data, in_align, soft_backtrack)
+    test_all_assignment_coverage(data, threshold_align, soft_backtrack)
+    test_all_assignment_coverage(data, blended_align, soft_backtrack)
+    test_all_assignment_coverage(data, in_align, hard_backtrack)
+    test_all_assignment_coverage(data, threshold_align, hard_backtrack)
+    test_all_assignment_coverage(data, blended_align, hard_backtrack)
