@@ -1,11 +1,9 @@
 from data_loader import DataLoader
 from imdb_matching import *
-from sklearn.metrics import accuracy_score
 from ssa_matching import *
 
-"""Statistics for matching."""
+"""Statistics for coverage."""
 
-# -------------------- COVERAGE TESTS --------------------
 def _test_alignment_coverage(movie, alignment_fn):
     """
     Helper for test_all_alignment_coverage to count matches
@@ -40,7 +38,7 @@ def test_all_alignment_coverage(data, alignment_fn):
     total_lines_matched = 0
     total_chars_missed = 0
     total_lines_missed = 0
-    for movie in data.movies:
+    for movie in data.movies.values():
         chars_matched, chars_missed, lines_matched, lines_missed = (
                     _test_alignment_coverage(movie, alignment_fn))
         total_chars_matched += chars_matched
@@ -136,7 +134,7 @@ def test_all_assignment_coverage(data, alignment_fn, assignment_fn):
     total_lines_missed = 0
     total_chars_gendered = 0
 
-    for movie in data.movies:
+    for movie in data.movies.values():
         success, failure, chars_matched, chars_missed, lines_matched, lines_missed, chars_gendered = (
                     _test_assignment_coverage(movie, alignment_fn, assignment_fn))
         total_success += success
@@ -177,7 +175,7 @@ def test_all_assignment_coverage(data, alignment_fn, assignment_fn):
 
     print('----------------------------')
 
-def _test_ssa_coverage(movie, ssa_dict, check_decade):
+def _test_ssa_coverage(movie, ssa_dict, mode, check_decade):
     """
     Helper for test_all_ssa_coverage to count coverage
     in an individual script.
@@ -186,10 +184,10 @@ def _test_ssa_coverage(movie, ssa_dict, check_decade):
     chars_missed = 0
     lines_matched = 0
     lines_missed = 0
-    year = movie.year
-    for character in movie.characters:
-        pred = predict_gender_rb_ssa(ssa_dict, character.name, mode='hard', movie_year=year, check_decade=check_decade)
-        if pred is not None:
+    gender_alignments = predict_gender_ssa(ssa_dict, movie, mode, check_decade)
+    for sname, gen in gender_alignments.items():
+        character = movie.get_character(sname)
+        if gen == 'M' or gen == 'F':
             chars_matched += 1
             lines_matched += len(character.line_data)
         else:
@@ -197,9 +195,9 @@ def _test_ssa_coverage(movie, ssa_dict, check_decade):
             lines_missed += len(character.line_data)
     return chars_matched, chars_missed, lines_matched, lines_missed
 
-def test_all_ssa_coverage(data, check_decade):
+def test_all_ssa_coverage(data, mode, check_decade):
     """
-    Checks coverage for the SSA-RB gender prediction function.
+    Checks coverage for the SSA gender prediction function.
     Provides two statistics:
     1. Characters covered - a script character is covered
     if its gender can be predicted.
@@ -211,9 +209,9 @@ def test_all_ssa_coverage(data, check_decade):
     total_lines_matched = 0
     total_chars_missed = 0
     total_lines_missed = 0
-    for movie in data.movies:
-        chars_matched, chars_missed, lines_matched, lines_missed = (
-                    _test_ssa_coverage(movie, ssa_dict, check_decade))
+    for movie in data.movies.values():
+        chars_matched, chars_missed, lines_matched, lines_missed = \
+            _test_ssa_coverage(movie, ssa_dict, mode, check_decade)
         total_chars_matched += chars_matched
         total_chars_missed += chars_missed
         total_lines_matched += lines_matched
@@ -222,7 +220,7 @@ def test_all_ssa_coverage(data, check_decade):
     total_chars = total_chars_matched + total_chars_missed
     total_lines = total_lines_matched + total_lines_missed
 
-    print('SSA COVERAGE TEST: check_decade = {}'.format(check_decade))
+    print('SSA TEST: mode = {}, check_decade = {}'.format(mode, check_decade))
     print('Total Characters Covered: {} / {}% \
     Total Characters Missed: {} / {}%' .format(total_chars_matched,
                                               round(total_chars_matched/total_chars * 100, 2),
@@ -235,55 +233,10 @@ def test_all_ssa_coverage(data, check_decade):
                                           round(total_lines_missed/total_lines * 100, 2)))
     print('----------------------------')
 
-# -------------------- ACCURACY TESTS --------------------
-PATH_TO_GOLD_LABELS = './data/gold_labels/'
 
-def parse_annotation_file(filename):
-    char_dict = {}
-    with open(PATH_TO_GOLD_LABELS + filename) as f:
-        title = filename.split(' ALIGNED.txt', 1)[0].strip()
-        # movie = data.get_movie(title)
-        # assert(movie is not None)
-        for line in f.readlines():
-            sname_gen, alignment = line.split(' -> ')
-            sname, gen = sname_gen.split(' (')
-            gen = gen.rstrip(')')
-            alignment = alignment.strip()
-            if alignment.startswith('POSSIBILITIES '):
-                certain = False
-                inames = alignment.strip('POSSIBILITIES ').split(', ')
-            elif alignment == 'N/A':
-                certain = True
-                inames = None
-            elif ', ' in alignment:
-                certain = True
-                inames = alignment.split(', ')
-            else:
-                certain = True
-                inames = alignment
-            char_dict[sname] = (gen, inames, certain)
-    return char_dict
-
-def get_accuracy(gold, pred, only_gender):
-    if only_gender:
-        ordered_snames = sorted(list(gold.keys()))
-        gold_labels = [gender_to_idx(gold[sname][0]) for sname in ordered_snames]
-        pred_labels = [gender_to_idx(pred[sname]) for sname in ordered_snames]
-        return accuracy_score(gold_labels, pred_labels)
-
-def gender_to_idx(gender):
-    if gender == 'UNK':
-        return 0
-    if gender == 'F':
-        return 1
-    if gender == 'M':
-        return 2
-    if gender == 'BOTH':
-        return 3
-    return -1
 
 if __name__ == "__main__":
-    # data = DataLoader(verbose=False)
+    data = DataLoader(verbose=False)
     # test_all_alignment_coverage(data, in_align)
     # test_all_alignment_coverage(data, threshold_align)
     # test_all_alignment_coverage(data, blended_align)
@@ -293,7 +246,9 @@ if __name__ == "__main__":
     # test_all_assignment_coverage(data, in_align, hard_backtrack)
     # test_all_assignment_coverage(data, threshold_align, hard_backtrack)
     # test_all_assignment_coverage(data, blended_align, hard_backtrack)
-    # test_all_ssa_coverage(data, check_decade=True)
-    # test_all_ssa_coverage(data, check_decade=False)
-    gold = parse_annotation_file('10 Things I Hate About You ALIGNED.txt')
+    test_all_ssa_coverage(data, mode='soft', check_decade=True)
+    test_all_ssa_coverage(data, mode ='soft', check_decade=False)
+    test_all_ssa_coverage(data, mode='hard', check_decade=True)
+    test_all_ssa_coverage(data, mode='hard', check_decade=False)
+
 

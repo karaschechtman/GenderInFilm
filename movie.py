@@ -21,3 +21,10 @@ class Movie(object):
         self.bechdel_score = bechdel_score
         self.imdb_cast = imdb_cast
         self.characters = characters
+
+    def get_character(self, char_name):
+        """
+        Get a mutable Character object with a given name.
+        Raises a KeyError if the character does not exist.
+        """
+        return self.characters[char_name]

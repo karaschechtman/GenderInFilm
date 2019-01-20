@@ -168,8 +168,6 @@ def predict_gender_imdb(movie, alignment_fn, assignment_fn, max_inames=-1):
     the gender of characters. Returns a dictionary from character
     names to predicted genders.
     """
-    if max_inames > 0 and max_inames < len(imdb_cast):
-        imdb_cast = imdb_cast[:max_inames]
     script_to_imdb = defaultdict(list)
     for character in movie.characters:
         for iname in movie.imdb_cast:

@@ -13,15 +13,15 @@ def char_name_to_tokens(char_name):
 # --------------------- RULE-BASED PREDICTION ---------------------
 FEMALE_TERMS = {'ms', 'miss', 'mrs', 'mother', 'mom', 'momma', 'sister',
                 'aunt', 'grandma', 'grandmother', 'lady', 'mistress',
-                'duchess', 'madam', 'madame', 'princess', 'girl', 'woman'
+                'madam', 'madame', 'princess', 'girl', 'woman'
                 'waitress', 'female'}
 MALE_TERMS = {'mr', 'mister', 'father', 'dad', 'brother', 'uncle',
-              'grandpa', 'grandfather', 'master', 'duke', 'prince',
+              'grandpa', 'grandfather', 'master', 'prince',
               'boy', 'man', 'male'}
 
-def predict_gender_rb(char_name):
+def score_gender_rb(char_name):
     """
-    The simplest gender predictor: checks for gendered terms in the
+    The simplest gender scorer: checks for gendered terms in the
     character name, such as 'girl' and 'boy'.
     """
     toks = char_name_to_tokens(char_name)
@@ -36,6 +36,10 @@ def predict_gender_rb(char_name):
 PATH_TO_SSA = './data/ssa_names_1880_2017/'
 SSA_MIN = 1880
 SSA_MAX = 2017
+HARD_F_CUTOFF = .9
+HARD_M_CUTOFF = .1
+SOFT_F_CUTOFF = .5
+SOFT_M_CUTOFF = .5
 
 def make_ssa_dict():
     """
@@ -77,13 +81,16 @@ def get_name_scores(ssa_fn):
         name_to_counts[name] = score
     return name_to_counts
 
-def predict_gender_ssa(ssa_dict, char_name, movie_year=None, check_decade=True):
+def score_gender_ssa(ssa_dict, char_name, movie_year=None, check_decade=True):
     """
-    Predicts a character's gender based on SSA name_scores. If check_decade is True,
-    only the years in the decade preceding the movie are checked for name_scores;
-    otherwise, all years are checked. After collecting all name_scores for this name,
-    the name_scores are averaged.
+    Scores a character's gender based on SSA name_scores (after trying rule-based.
+    If check_decade is True, only the years in the decade preceding the movie are
+    checked for name_scores; otherwise, all years are checked. After collecting all
+    name_scores for this name, the name_scores are averaged.
     """
+    rb_pred = score_gender_rb(char_name)
+    if rb_pred is not None:
+        return rb_pred
     toks = char_name_to_tokens(char_name)
     for tok in toks:
         sum_score = 0
@@ -97,14 +104,54 @@ def predict_gender_ssa(ssa_dict, char_name, movie_year=None, check_decade=True):
                 sum_score += ssa_dict[year][tok]
                 year_count += 1
         if year_count > 0:
+            print(tok)
             return sum_score / year_count
     return None
 
-def predict_gender_rb_ssa(ssa_dict, char_name, movie_year=None, check_decade=True):
+def score_to_category(score, mode):
+    if score is None:
+        return 'UNK'
+    if mode == 'hard' and score > HARD_F_CUTOFF:
+        return 'F'
+    if mode == 'hard' and score < HARD_M_CUTOFF:
+        return 'M'
+    if mode == 'soft' and score > SOFT_F_CUTOFF:
+        return 'F'
+    if mode == 'soft' and score < SOFT_M_CUTOFF:
+        return 'M'
+    return 'UNK'
+
+def predict_gender_ssa(ssa_dict, movie, mode, check_decade=True):
     """
-    Predicts gender by first trying rule-based, and if it fails, tries SSA-based.
+    Predicts gender based on gender score. The modes, 'hard' or 'soft', determine the score cutoff
+    for each gender.
     """
-    rb_pred = predict_gender_rb(char_name)
-    if rb_pred is not None:
-        return rb_pred
-    return predict_gender_ssa(ssa_dict, char_name, movie_year=movie_year, check_decade=check_decade)
+    assert(mode == 'hard' or mode == 'soft')
+    gender_alignments = {}
+    year = movie.year
+    for character in movie.characters.values():
+        sname = character.name
+        gen = 'UNK'
+        if ' and ' in sname:
+            individual_names = sname.split(' and ')
+            categories = []
+            for name in individual_names:
+                score = score_gender_ssa(ssa_dict, name, movie_year=year, check_decade=check_decade)
+                categories.append(score_to_category(score, mode))
+            if 'UNK' not in categories:
+                if 'F' in categories and 'M' not in categories:
+                    gen = 'F'
+                elif 'M' in categories and 'F' not in categories:
+                    gen = 'M'
+                else:
+                    gen = 'BOTH'
+        else:
+            score = score_gender_ssa(ssa_dict, sname, movie_year=year, check_decade=check_decade)
+            gen = score_to_category(score, mode)
+        gender_alignments[sname] = gen
+    return gender_alignments
+
+if __name__ == "__main__":
+    ssa_dict = make_ssa_dict()
+    char_name = 'whitney james'
+    print(score_gender_ssa(make_ssa_dict(), char_name, movie_year=1988, check_decade=True))
