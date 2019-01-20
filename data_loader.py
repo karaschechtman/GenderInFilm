@@ -55,7 +55,7 @@ def _read_field(line, cast_fn = None, split = False):
     """
     Helper function to handle retrieve field value from the text file.
     """
-    field = ': '.join(line.split(': ')[1:]).rstrip() # Read in the field.
+    field = line.split(': ', 1)[1].rstrip() # Read in the field.
     if field == 'None':
         return None
     elif split == True:

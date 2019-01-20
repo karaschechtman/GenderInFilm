@@ -1,5 +1,7 @@
 '''Process names'''
 
+import string
+
 def variant_to_root(var):
     """
     Transforms a variant of a character name to its root.
@@ -17,4 +19,5 @@ def variant_to_root(var):
     elif ' voice' in var or ' voice over' in var or ' voice-over' in var:
         var = var.split(' voice', 1)[0]
 
-    return var
+    translator = str.maketrans('', '', string.punctuation)
+    return var.translate(translator)
