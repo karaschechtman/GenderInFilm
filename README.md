@@ -10,7 +10,7 @@ Simple Python interface for analyzing data about gender in film. Data from Agarw
 - `character.py`: Object storing information about a particular character.
 - `imdb_matching.py:` Handles matching characters to IMDB gender data.
 - `ssa_matching.py:` Handles matching characters to SSA data.
-- `name_processing.py:` Processes name data.
+
 # Data
 Data is stored in the data/ folder and contains both metadata about the movie and the processed Agarwal movie script, mainly consisting of information about character line data. 
 
