@@ -1,10 +1,12 @@
-__author__ = 'Kara Schechtman <kws2121@columbia.edu>'
-__date__ = 'Jan 15, 2019'
+__author__ = 'Kara Schechtman <kws2121@columbia.edu>, Serina Chang <sc3003@columbia.edu'
+__date__ = 'Jan 20, 2019'
 
 import sys
 sys.path.append('..')
 
-DATA_PATH = 'data/agarwal'
+DATA_PATH = '../data'
+AGARWAL_DIR = 'agarwal_with_metadata'
+NEW_DATA_DIR = 'data_loader_txt'
 
 IMDB_KEY = 'IMDB: '
 TITLE_KEY = 'Title: '
@@ -30,14 +32,13 @@ class AgarwalDataManager(object):
     """
     def __init__(self):
         self.movies = []
-        data_dir = os.path.join(os.getcwd(), DATA_PATH)
-
+        data_dir = os.path.join(DATA_PATH, AGARWAL_DIR)
         for filename in os.listdir(data_dir):
             if filename.endswith('.txt'):
                 filepath = os.path.join(data_dir, filename)
                 with open(filepath, 'r') as file:
                     lines = file.readlines()
-                    _check_metadata_format(lines)
+                    _check_metadata_format(lines, filename)
 
                     # Extract data from files.
                     imdb = _read_field(lines[0])
@@ -59,8 +60,9 @@ class AgarwalDataManager(object):
                                          characters))
 
     def write(self):
+        data_dir = os.path.join(DATA_PATH, NEW_DATA_DIR)
         for movie in self.movies:
-            filename = 'data/%s.txt' % (movie.title)
+            filename = '%s/%s.txt' % (data_dir, movie.title)
             with open(filename, 'w+') as file:
                 print(movie.title)
                 file.write('%s%s\n' % (IMDB_KEY, movie.imdb))
@@ -96,7 +98,6 @@ def _variant_to_root(var):
     var = var.lower()
     var = var.split(' (', 1)[0]  # e.g. willy (v.o.) --> willy
     var = var.strip(':')  # carol: --> carol
-    var = var.replace('. ', ' ')  # mr. wang --> mr wang
 
     # handle voice-overs
     if '\'s voice' in var:  # e.g. cate's voice --> cate
@@ -109,7 +110,7 @@ def _variant_to_root(var):
     translator = str.maketrans('', '', string.punctuation)
     return var.translate(translator)
 
-def _check_metadata_format(lines):
+def _check_metadata_format(lines, filename):
     """
     Helper function to check the metadata of the file
     is formatted correctly.
@@ -157,3 +158,9 @@ def _extract_characters(script):
         if len(line_data) != 0:
             characters.append(Character(name, line_data))
     return characters
+
+if __name__ == "__main__":
+    adm = AgarwalDataManager()
+    print(len(adm.movies))
+    adm.write()
+    print(len(os.listdir(os.path.join(DATA_PATH, NEW_DATA_DIR))))

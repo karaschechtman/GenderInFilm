@@ -1,3 +1,6 @@
+__author__ = 'Serina Chang <sc3003@columbia.edu>'
+__date__ = 'Jan 20, 2019'
+
 from bs4 import BeautifulSoup
 import json
 import os
@@ -5,8 +8,10 @@ import pickle
 import requests
 
 '''Parsing from screenplay'''
-# Extract the title and character names from the screenplay
 def extract_sp_title_and_char_names(lines):
+    """
+    Extracts the title and character names in the screenplay lines.
+    """
     title, char_names = None, set()
     for line in lines:
         line = line.strip()
@@ -23,9 +28,11 @@ IMDB_DOMAIN = 'https://www.imdb.com'
 FEMALE_PRONOUNS = {'she', 'her', 'hers', 'herself'}
 MALE_PRONOUNS = {'he', 'him', 'his', 'himself'}
 
-# Find IMDb search result that has the highest number of character matches with the
-# character names extracted from the screenplay
 def find_imdb_match(s_title, s_char_names, top_n=5):
+    """
+    Finds the IMDb search result that has the highest number of character matches with
+    the character names from the screenplay.
+    """
     title_toks = s_title.split()
     search_url = 'https://www.imdb.com/find?q={}&s=tt'.format('+'.join(title_toks))
     r = requests.get(search_url)
@@ -46,8 +53,11 @@ def find_imdb_match(s_title, s_char_names, top_n=5):
             best_soup = soup
     return best_soup
 
-def extract_imdb_char_names(soup):
-    characters = soup.find_all('td', attrs={'class':'character'})
+def extract_imdb_char_names(main_page):
+    """
+    Extracts character names from the main IMDb page for the movie.
+    """
+    characters = main_page.find_all('td', attrs={'class':'character'})
     char_names = set()
     for item in characters:
         c = clean_char_name_text(item.text)
@@ -56,6 +66,9 @@ def extract_imdb_char_names(soup):
     return char_names
 
 def clean_char_name_text(text):
+    """
+    Cleans a character name extracted from the main IMDb page for the movie.
+    """
     text = text.replace(',', '')  # strip commas
     char_names = text.split('/')  # sometimes a row lists multiple character names
     cleaned_names = []
@@ -64,6 +77,10 @@ def clean_char_name_text(text):
     return '/'.join(cleaned_names)
 
 def compute_char_match(s_char_names, i_char_names):
+    """
+    Computes the number of matches between the extracted screenplay character names
+    and the extracted IMDb names.
+    """
     num_matched = 0
     for icn in i_char_names:
         sub_icns = icn.split('/')
@@ -73,12 +90,19 @@ def compute_char_match(s_char_names, i_char_names):
     return num_matched
 
 def extract_imdb_id(main_page):
+    """
+    Extracts the IMDb ID from the main IMDb page for the movie.
+    """
     id_wrapper = main_page.find('meta', attrs={'property':'pageId'})
     if id_wrapper is not None:
         return id_wrapper['content'].strip('tt')
     return None
 
 def extract_imdb_headings(main_page):
+    """
+    Extracts the movie title, year, and list of genres from the main
+    IMDb page for the movie.
+    """
     title, year, genres = None, None, set()
     wrapper = main_page.find('div', attrs={'class':'title_wrapper'})
     if wrapper is not None:
@@ -97,17 +121,28 @@ def extract_imdb_headings(main_page):
     return title, year, genres
 
 def extract_imdb_rating(main_page):
+    """
+    Extracts the IMDb rating from the main IMDb page for the movie.
+    """
     rating_wrap = main_page.find('span', attrs={'itemprop':'ratingValue'})
     if rating_wrap is not None:
         return float(rating_wrap.text)
     return None
 
 def make_full_credits_url(imdb_id):
+    """
+    Makes the URL for the IMDb full credits page of the movie, given its
+    IMDb ID.
+    """
     return '{}/title/tt{}/fullcredits'.format(IMDB_DOMAIN, imdb_id)
 
-# director tuples: < director name, director gender >
-# cast tuples: < character name, actor name, actor gender >
 def extract_credits(credits_page):
+    """
+    Extracts the full list of director and cast credits from the
+    IMDb full credits page of the movie.
+    director tuples: < director name, director gender >
+    cast tuples: < character name, actor name, actor gender >
+    """
     dir_tuples = []
     char_tuples = []
     headers = credits_page.find_all('h4', attrs={'class':'dataHeaderWithBorder'})
@@ -139,28 +174,12 @@ def extract_credits(credits_page):
                 char_tuples.append((char_name, act_name, gender))
     return dir_tuples, char_tuples
 
-# returns list of tuples: < character name, actor name, actor gender >
-def extract_imdb_char_tuples(soup):
-    tuples = []
-    table = soup.find('table', attrs={'class':'cast_list'})
-    for row in table.find_all('tr'):
-        if row.has_attr('class') and row['class'] != 'classlist_label':  # first row
-            act_name, char_name = row.text.split('...')
-            act_name = act_name.strip()
-            char_name = clean_char_name_text(char_name)
-            gender = None
-            photo = row.find('td', attrs={'class':'primary_photo'})
-            if photo is not None:
-                link = photo.find('a')
-                if link is not None:
-                    bio_url = IMDB_DOMAIN + link['href']
-                    bio_soup = BeautifulSoup(requests.get(bio_url).content, 'html.parser')
-                    gender = predict_gender_from_bio(bio_soup)
-            tuples.append((char_name, act_name, gender))
-    return tuples
-
-def predict_gender_from_bio(soup):
-    jobs = soup.find('div', attrs={'id':'name-job-categories'})
+def predict_gender_from_bio(bio_page):
+    """
+    Predicts the gender from the IMDb bio page for a (real) person, e.g.
+    a director or an actor.
+    """
+    jobs = bio_page.find('div', attrs={'id':'name-job-categories'})
     if jobs is not None:
         text = jobs.text
         # Actress / Actor are gendered on IMDb; others, like Producer, are not
@@ -168,7 +187,7 @@ def predict_gender_from_bio(soup):
             return 'F'
         elif 'Actor' in text:
             return 'M'
-    bio = soup.find('div', attrs={'id':'name-bio-text'})
+    bio = bio_page.find('div', attrs={'id':'name-bio-text'})
     if bio is not None:
         text = bio.text.lower()
         fcount = 0
@@ -188,6 +207,9 @@ def predict_gender_from_bio(soup):
 PATH_TO_BECHDEL = 'bechdel_20190115.json'
 
 def make_bechdel_dict():
+    """
+    Makes a dictionary of IMDb ID mapped to Bechdel rating.
+    """
     bechdel_json = json.load(open(PATH_TO_BECHDEL, 'r'))
     bechdel_dict = {}
     for entry in bechdel_json:
@@ -200,6 +222,17 @@ PATH_TO_SKIPPED = './data/skipped.pkl'
 PATH_TO_DATA = './data/data_with_screenplays/'
 
 def convert_screenplays_to_dl_files(continue_work=True, max_files=None):
+    """
+    For each screenplay in the original Agarwal dataset, this function tries to create
+    a new text file that includes metadata pulled from IMDb and bechdeltest.com,
+    followed by the original screenplay. From IMDb, the metadata consists of: ID, title,
+    year, genres, director(s)/gender(s), movie rating, and characters/actors/genders,
+    and from bechdeltest.com, we find the Bechdel score if applicable.
+    The creation of the new file fails if:
+    (1) no title or character name can be extracted from the original screenplay;
+    (2) no IMDb match is found for the screenplay's extracted title + character names;
+    (3) some ValueError occurs while making requests and parsing IMDb pages.
+    """
     screenplay_files = os.listdir(PATH_TO_SCREENPLAYS)
     if continue_work:
         skipped = pickle.load(open(PATH_TO_SKIPPED, 'rb'))
@@ -251,6 +284,9 @@ def convert_screenplays_to_dl_files(continue_work=True, max_files=None):
     print('Progress: {} successful, {} skipped'.format(len(os.listdir(PATH_TO_DATA)), len(skipped)))
 
 def format_metadata(ID, title, year, genres, rating, dir_tuples, char_tuples, bechdel_score):
+    """
+    Formats metadata into a string.
+    """
     genres = ', '.join(sorted(list(genres)))  # sort alphabetically
     tuples_as_strings = []
     for d, g in dir_tuples:
@@ -270,6 +306,9 @@ def format_metadata(ID, title, year, genres, rating, dir_tuples, char_tuples, be
         ID, title, year, genres, dir_str, rating, bechdel_score, char_str)
 
 def demo(imdb_movie_url, bechdel_dict):
+    """
+    Retrieves the metadata for some movie and prints the formatted metadata string.
+    """
     main_page = BeautifulSoup(requests.get(imdb_movie_url).content, 'html.parser')
     ID = extract_imdb_id(main_page)
     title, year, genres = extract_imdb_headings(main_page)
