@@ -8,6 +8,7 @@ Simple Python interface for analyzing data about gender in film. Data from Agarw
 - `character.py`: Object storing information about a particular character.
 - `imdb_matching.py:` Handles matching characters to IMDB gender data.
 - `ssa_matching.py:` Handles matching characters to SSA data.
+- `matching_stats.py:` Handles statistics about matching stats.
 
 ## ./preprocessing/
 - `agarwal_data_manager.py:` contains AgarwalDataManager object to load data from Agarwal files and write new versions with line counts for characters rather than full scripts.
