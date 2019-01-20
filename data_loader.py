@@ -50,6 +50,7 @@ class DataLoader(object):
                                          bechdel_score, imdb_cast,
                                          characters))
         print('All data loaded!')
+        print('----------------------------')
 
 def _read_field(line, cast_fn = None, split = False):
     """
