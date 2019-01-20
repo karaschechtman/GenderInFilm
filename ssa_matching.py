@@ -1,4 +1,4 @@
-PATH_TO_SSA = './ssa_names_1880_2017/'
+PATH_TO_SSA = './data/ssa_names_1880_2017/'
 SSA_MIN = 1880
 SSA_MAX = 2017
 FEMALE_TITLES = {'ms', 'miss', 'mrs', 'mother', 'mom', 'momma', 'sister', 'aunt', 'grandma', 'grandmother',

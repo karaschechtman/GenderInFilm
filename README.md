@@ -2,17 +2,20 @@
 Simple Python interface for analyzing data about gender in film. Data from Agarwal et. al (2015) and the Internet Movie Database (IMDb). Bechdel scores are from bechdeltest.com.
 
 # Files
-- `bechdel_20190115.json`: contains the most updated Bechdel scores from bechdeltest.com as of Jan 15, 2019.
-- `agarwal_data_manager.py:` contains AgarwalDataManager object to load data from Agarwal files and write new versions with line counts for characters rather than full scripts.
+## ./
 - `data_loader.py`: contains DataLoader object to load information about movies from data/to memory as Movie objects.
-- `make_data.py`: extracts metadata from IMDb and Bechdel score from json files; writes them all into text files.
 - `movie.py`: Object storing information about a particular movie.
 - `character.py`: Object storing information about a particular character.
 - `imdb_matching.py:` Handles matching characters to IMDB gender data.
 - `ssa_matching.py:` Handles matching characters to SSA data.
 
+## ./preprocessing/
+- `agarwal_data_manager.py:` contains AgarwalDataManager object to load data from Agarwal files and write new versions with line counts for characters rather than full scripts.
+- `make_data.py`: extracts metadata from IMDb and Bechdel score from json files; writes them all into text files.
+
+
 # Data
-Data is stored in the data/ folder and contains both metadata about the movie and the processed Agarwal movie script, mainly consisting of information about character line data. 
+Data should be downloaded from Google Drive and the ZIP file extracted in `./` such that there is a directory `./data`
 
 ## Metadata format
 - IMBD: `<imdb id, str>`

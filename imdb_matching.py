@@ -161,7 +161,7 @@ def soft_backtrack(script_to_imdb):
         return False
 
 # ---------------------------- PREDICT ----------------------------
-def predict_gender(movie, alignment_fn, assignment_fn):
+def predict_gender_imdb(movie, alignment_fn, assignment_fn):
     """
     Given a movie, a function to align IMDB data to the characters,
     and a function to choose from potential aligned names, predict

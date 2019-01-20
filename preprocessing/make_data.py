@@ -192,8 +192,8 @@ def make_bechdel_dict():
     return bechdel_dict
 
 '''Write to file'''
-PATH_TO_SCREENPLAYS = './data/agarwal_screenplays/'
-PATH_TO_DATA = './data/data_loader_txt/'
+PATH_TO_SCREENPLAYS = '../data/agarwal_screenplays/'
+PATH_TO_DATA = '../data/data_loader_txt/'
 
 def convert_screenplays_to_dl_files(continue_work=True, max_files=None):
     screenplay_files = os.listdir(PATH_TO_SCREENPLAYS)

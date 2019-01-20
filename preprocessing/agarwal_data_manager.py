@@ -1,6 +1,9 @@
 __author__ = 'Kara Schechtman <kws2121@columbia.edu>'
 __date__ = 'Jan 15, 2019'
 
+import sys
+sys.path.append('..')
+
 DATA_PATH = 'data/agarwal'
 
 IMDB_KEY = 'IMDB: '
