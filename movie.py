@@ -3,7 +3,6 @@ __date__ = 'Jan 15, 2019'
 
 from character import Character
 from collections import defaultdict
-from name_processing import variant_to_root
 
 class Movie(object):
     """

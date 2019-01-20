@@ -19,7 +19,7 @@ import os
 from character import Character
 from collections import OrderedDict
 from movie import Movie
-from name_processing import variant_to_root
+import string
 
 class AgarwalDataManager(object):
     """
@@ -86,6 +86,26 @@ def _read_field(line, cast_fn = None, split = False):
     else:
         return field
 
+def _variant_to_root(var):
+    """
+    Transforms a variant of a character name to its root.
+    """
+    var = var.lower()
+    var = var.split(' (', 1)[0]  # e.g. willy (v.o.) --> willy
+    var = var.strip(':')  # carol: --> carol
+    var = var.replace('. ', ' ')  # mr. wang --> mr wang
+
+    # handle voice-overs
+    if '\'s voice' in var:  # e.g. cate's voice --> cate
+        var = var.split('\'s', 1)[0]
+    elif 's\' voice' in var or 'z\' voice' in var:  # e.g. chris' voice --> chris
+        var = var.split('\'', 1)[0]
+    elif ' voice' in var or ' voice over' in var or ' voice-over' in var:
+        var = var.split(' voice', 1)[0]
+
+    translator = str.maketrans('', '', string.punctuation)
+    return var.translate(translator)
+
 def _check_metadata_format(lines):
     """
     Helper function to check the metadata of the file
@@ -118,7 +138,7 @@ def _extract_characters(script):
                 names[name].append(dialogue.strip())
             else:
                 names[name] = [dialogue.strip()]
-            name = variant_to_root(datum.split(CHARACTER)[1].strip())
+            name = _variant_to_root(datum.split(CHARACTER)[1].strip())
             dialogue = ''
         if datum.startswith(DIALOGUE):
             dialogue += ' ' + datum.split(DIALOGUE)[1].strip()
