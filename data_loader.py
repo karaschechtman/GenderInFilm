@@ -113,10 +113,10 @@ def _extract_characters(script):
     """
     Helper function to create Character objects from file.
     """
-    characters = []
+    characters = {}
     for person in script:
         name_to_lines = person.rstrip().split(': ')
         name = ': '.join(name_to_lines[0:-1])
         line_data = [int(num) for num in name_to_lines[-1].split(', ')]
-        characters.append(Character(name, line_data))
+        characters[name] = Character(name, line_data)
     return characters
