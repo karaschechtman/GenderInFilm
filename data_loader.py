@@ -96,15 +96,28 @@ def _process_imdb_cast(imdb_cast_list):
     Processes IMDB character data from file and makes a dictionary
     mapping from their names to the actor names and gender of the
     actor that portrays them in a tuple.
+    If there are two characters with the same name in IMDB, then
+    the character key is character (actor last name).
     """
     if imdb_cast_list:
         imdb_cast = {}
+        dup_character_names = set()
         for entry in imdb_cast_list:
             c = entry.split(' | ')
-            char_name = c[0].lower()
-            actor_name = c[1].split('(')[0]
+            char_name = c[0].lower().strip()
+            actor_name = c[1].split('(')[0].lower().strip()
             gender = c[1].split('(')[-1].strip(')')
-            imdb_cast[char_name] = (actor_name, gender)
+            if char_name in imdb_cast: # first duplicate character
+                # Handle the old duplicate
+                old_dup_char = imdb_cast[char_name]
+                imdb_cast[char_name + ' (' + old_dup_char[0] +')'] = old_dup_char
+                del imdb_cast[char_name]
+                imdb_cast[char_name + ' (' + actor_name + ')'] = (actor_name, gender)
+                dup_character_names.add(char_name)
+            elif char_name in dup_character_names: # duplicate caught before
+                imdb_cast[char_name + ' (' + actor_name + ')'] = (actor_name, gender)
+            else:
+                imdb_cast[char_name] = (actor_name, gender)
         return imdb_cast
     else:
         return None
