@@ -130,7 +130,6 @@ def predict_gender_ssa(ssa_dict, movie, mode, check_decade=True):
     year = movie.year
     for character in movie.characters.values():
         sname = character.name
-        gen = 'UNK'
         if ' and ' in sname:
             individual_names = sname.split(' and ')
             categories = []
@@ -139,15 +138,14 @@ def predict_gender_ssa(ssa_dict, movie, mode, check_decade=True):
                 categories.append(score_to_category(score, mode))
             if 'UNK' not in categories:
                 if 'F' in categories and 'M' not in categories:
-                    gen = 'F'
+                    gender_alignments[sname] = 'F'
                 elif 'M' in categories and 'F' not in categories:
-                    gen = 'M'
-                else:
-                    gen = 'BOTH'
+                    gender_alignments[sname] = 'M'
         else:
             score = score_gender_ssa(ssa_dict, sname, movie_year=year, check_decade=check_decade)
             gen = score_to_category(score, mode)
-        gender_alignments[sname] = gen
+            if gen != 'UNK':
+                gender_alignments[sname] = gen
     return gender_alignments
 
 if __name__ == "__main__":
