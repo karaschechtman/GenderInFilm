@@ -169,7 +169,7 @@ def predict_gender_imdb(movie, alignment_fn, assignment_fn):
     names to predicted genders.
     """
     script_to_imdb = defaultdict(list)
-    for character in movie.characters.values():
+    for character in movie.characters:
         for iname in movie.imdb_cast:
             if alignment_fn(iname, character):
                 script_to_imdb[character].append(iname)
