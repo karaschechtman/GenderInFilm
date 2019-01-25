@@ -31,7 +31,7 @@ def get_num_oscars_parsed():
 def make_imdb_url(id):
     return 'https://www.imdb.com/title/tt{}/'.format(id)
 
-def make_corpus(max_movies, continue_work = True):
+def make_corpus(max_movies = None, continue_work = True):
     movies = parse_oscars_csv()
     if continue_work:
         processed_before = get_num_oscars_parsed()
@@ -39,7 +39,7 @@ def make_corpus(max_movies, continue_work = True):
         movies = movies[processed_before:]
     print('Num to process:', len(movies))
     bechdel_dict = make_bechdel_dict()
-    if len(movies) > max_movies:
+    if max_movies is not None and len(movies) > max_movies:
         movies = movies[:max_movies]
     for name, year, id, won in movies:
         print(name, year)
@@ -59,4 +59,4 @@ def make_corpus(max_movies, continue_work = True):
             f.write('Oscar Best Picture Winner: {}\n'.format(won))
 
 if __name__ == "__main__":
-    make_corpus(max_movies=5)
+    make_corpus()
