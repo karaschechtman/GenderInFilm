@@ -43,20 +43,23 @@ def make_corpus(max_movies = None, continue_work = True):
         movies = movies[:max_movies]
     for name, year, id, won in movies:
         print(name, year)
-        id = pad_id(id)
-        movie_url = make_imdb_url(id)
-        movie_page = BeautifulSoup(requests.get(movie_url).content, 'html.parser')
-        title, year, genres = extract_imdb_headings(movie_page)
-        rating = extract_imdb_rating(movie_page)
-        credits_url = make_full_credits_url(id)
-        credits_page = BeautifulSoup(requests.get(credits_url).content, 'html.parser')
-        dir_tuples, char_tuples = extract_credits(credits_page)
-        bechdel_score = bechdel_dict.get(id)
-        metadata = format_metadata(id, title, year, genres, rating, dir_tuples, char_tuples, bechdel_score)
-        new_fn = PATH_TO_OSCARS + '{}___{}.txt'.format('_'.join(name.split()), year)
-        with open(new_fn, 'w') as f:
-            f.write(metadata)
-            f.write('Oscar Best Picture Winner: {}\n'.format(won))
+        try:
+            id = pad_id(id)
+            movie_url = make_imdb_url(id)
+            movie_page = BeautifulSoup(requests.get(movie_url).content, 'html.parser')
+            title, year, genres = extract_imdb_headings(movie_page)
+            rating = extract_imdb_rating(movie_page)
+            credits_url = make_full_credits_url(id)
+            credits_page = BeautifulSoup(requests.get(credits_url).content, 'html.parser')
+            dir_tuples, char_tuples = extract_credits(credits_page)
+            bechdel_score = bechdel_dict.get(id)
+            metadata = format_metadata(id, title, year, genres, rating, dir_tuples, char_tuples, bechdel_score)
+            new_fn = PATH_TO_OSCARS + '{}___{}.txt'.format('_'.join(name.split()), year)
+            with open(new_fn, 'w') as f:
+                f.write(metadata)
+                f.write('Oscar Best Picture Winner: {}\n'.format(won))
+        except ValueError:
+            print('ValueError: skipping', name)
 
 if __name__ == "__main__":
     make_corpus()

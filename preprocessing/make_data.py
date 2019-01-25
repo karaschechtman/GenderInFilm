@@ -160,17 +160,12 @@ def extract_credits(credits_page):
     if cast_table is not None:
         for row in cast_table.find_all('tr'):
             if row.has_attr('class') and row['class'] != 'classlist_label':
-                act_name, char_name = row.text.split('...')
-                act_name = act_name.strip()
-                char_name = clean_char_name_text(char_name)
-                gender = None
-                photo = row.find('td', attrs={'class':'primary_photo'})
-                if photo is not None:
-                    link = photo.find('a')
-                    if link is not None:
-                        bio_url = IMDB_DOMAIN + link['href']
-                        bio_soup = BeautifulSoup(requests.get(bio_url).content, 'html.parser')
-                        gender = predict_gender_from_bio(bio_soup)
+                photo, actor, ellipsis, character = row.find_all('td')
+                act_name = actor.text.strip()
+                char_name = clean_char_name_text(character.text)
+                bio_url = IMDB_DOMAIN + photo.find('a')['href']
+                bio_soup = BeautifulSoup(requests.get(bio_url).content, 'html.parser')
+                gender = predict_gender_from_bio(bio_soup)
                 char_tuples.append((char_name, act_name, gender))
     return dir_tuples, char_tuples
 
@@ -322,10 +317,10 @@ def demo(imdb_movie_url, bechdel_dict):
     print(metadata)
 
 if __name__ == "__main__":
-    # bechdel_dict = make_bechdel_dict()
+    bechdel_dict = make_bechdel_dict()
     # carol_url = 'https://www.imdb.com/title/tt2402927/'
     # bob_url = 'https://www.imdb.com/title/tt0103241/'  # has multiname characters
-    # thelma_and_louise_url = 'https://www.imdb.com/title/tt0103074/'  # has commas in char names
+    thelma_and_louise_url = 'https://www.imdb.com/title/tt0103074/'  # has commas in char names
     # four_rooms_url = 'https://www.imdb.com/title/tt0113101/'  # has multiple directors
-    # demo(carol_url, bechdel_dict)
-    convert_screenplays_to_dl_files(continue_work=True)
+    demo(thelma_and_louise_url, bechdel_dict)
+    # convert_screenplays_to_dl_files(continue_work=True)
