@@ -204,7 +204,7 @@ def predict_gender_from_bio(bio_page):
     return None
 
 '''Bechdel functions'''
-PATH_TO_BECHDEL = 'bechdel_20190115.json'
+PATH_TO_BECHDEL = '../data/bechdel/bechdel_20190124.json'
 
 def make_bechdel_dict():
     """
