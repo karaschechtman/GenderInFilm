@@ -1,3 +1,6 @@
+__author__ = 'Kara Schechtman <kws2121@columbia.edu>'
+__date__ = 'Jan 20, 2019'
+
 from character import Character
 from collections import defaultdict
 import difflib

@@ -1,3 +1,6 @@
+__author__ = 'Serina Chang <sc3003@columbia.edu>'
+__date__ = 'Jan 20, 2019'
+
 from data_loader import DataLoader
 from imdb_matching import *
 import numpy as np

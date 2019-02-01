@@ -1,3 +1,6 @@
+__author__ = 'Kara Schechtman <kws2121@columbia.edu>, Serina Chang <sc3003@columbia.edu'
+__date__ = 'Jan 20, 2019'
+
 from data_loader import DataLoader
 from imdb_matching import *
 from ssa_matching import *

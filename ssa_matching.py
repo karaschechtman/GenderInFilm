@@ -1,8 +1,6 @@
 __author__ = 'Serina Chang <sc3003@columbia.edu>'
 __date__ = 'Jan 20, 2019'
 
-import Levenshtein
-import math
 import os
 
 '''SSA-based and rule-based gender prediction for character names.'''

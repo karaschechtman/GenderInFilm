@@ -1,4 +1,4 @@
-__author__ = 'Kara Schechtman <kws2121@columbia.edu>'
+__author__ = 'Kara Schechtman <kws2121@columbia.edu>, Serina Chang <sc3003@columbia.edu>'
 __date__ = 'Jan 15, 2019'
 
 IMDB_KEY = 'IMDB: '
@@ -123,6 +123,11 @@ def _process_imdb_cast(imdb_cast_list):
         return None
 
 def _process_oscar_winner(line):
+    """
+    Helper function to check whether the Oscar Winner field is
+    in this file, and if so, returns whether this movie was a winner
+    or not of Oscars Best Picture.
+    """
     if OSCAR_WINNER_KEY in line:
         oscar_winner_bool = _read_field(line)
         if oscar_winner_bool == 'True':
@@ -139,7 +144,10 @@ def __change_key(dict, old, new):
 
 def _extract_characters(script):
     """
-    Helper function to create Character objects from file.
+    Helper function to create Character objects from file. If
+    the file has no characters (either we were missing the screenplay
+    for this movie or no characters could be found in the screenplay),
+    this function returns an empty set.
     """
     characters = {}
     for person in script:

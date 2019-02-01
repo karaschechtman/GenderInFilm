@@ -1,3 +1,6 @@
+__author__ = 'Serina Chang <sc3003@columbia.edu>'
+__date__ = 'Jan 28, 2019'
+
 from bs4 import BeautifulSoup
 import csv
 from make_data import *
@@ -8,11 +11,17 @@ PATH_TO_OSCARS = '../data/oscars/'
 IMDB_ID_LENGTH = 7
 
 def pad_id(id):
+    """
+    Pads id to the standard length.
+    """
     len_padding = IMDB_ID_LENGTH - len(id)
     padding = '0' * len_padding
     return padding + id
 
 def parse_oscars_csv():
+    """
+    Parses the csv that contains information on Oscar-nominated movies.
+    """
     movies = []
     with open(PATH_TO_OSCARS + 'noms.csv', 'r') as f:
         for row in csv.DictReader(f):
@@ -24,14 +33,26 @@ def parse_oscars_csv():
     return movies
 
 def get_num_oscars_parsed():
+    """
+    Returns how many data files exist in the corpus already.
+    """
     files = os.listdir(PATH_TO_OSCARS)
     count = [1 if f.endswith('.txt') else 0 for f in files]
     return sum(count)
 
 def make_imdb_url(id):
+    """
+    Creates the IMDb movie page url for movie with the given IMDb id.
+    """
     return 'https://www.imdb.com/title/tt{}/'.format(id)
 
 def make_corpus(max_movies = None, continue_work = True):
+    """
+    Primary function. Creates the Oscars metadata corpus by scraping metadata
+    from IMDb for each Oscar-nominated movie in the "noms.csv" file.
+    Metadata includes title, year, genres, movie rating, director
+    names and genders, actor names and genders, and Bechdel score.
+    """
     movies = parse_oscars_csv()
     if continue_work:
         processed_before = get_num_oscars_parsed()
