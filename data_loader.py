@@ -126,10 +126,10 @@ def _process_oscar_winner(line):
     if OSCAR_WINNER_KEY in line:
         oscar_winner_bool = _read_field(line)
         if oscar_winner_bool == 'True':
-            return 1
+            return True
         else:
-            return 0
-    return -1
+            return False
+    return None
 
 # From stackoverflow: https://bit.ly/2Cznq8R
 def __change_key(dict, old, new):
