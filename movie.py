@@ -10,7 +10,7 @@ class Movie(object):
     """
     def __init__(self, imdb, title, year,
                  genre, director, rating, bechdel_score,
-                 imdb_cast, characters):
+                 imdb_cast, oscar_winner, characters):
         # Set metadata.
         self.imdb = imdb
         self.title = title
@@ -20,6 +20,7 @@ class Movie(object):
         self.rating = rating
         self.bechdel_score = bechdel_score
         self.imdb_cast = imdb_cast
+        self.oscar_winner = oscar_winner
         self.characters = characters
 
     def get_character(self, char_name):

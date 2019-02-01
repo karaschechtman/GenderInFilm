@@ -1,8 +1,6 @@
 __author__ = 'Kara Schechtman <kws2121@columbia.edu>'
 __date__ = 'Jan 15, 2019'
 
-DATA_PATH = 'data/movies/'
-
 IMDB_KEY = 'IMDB: '
 TITLE_KEY = 'Title: '
 YEAR_KEY = 'Year: '
@@ -11,6 +9,7 @@ DIRECTOR_KEY = 'Director: '
 RATING_KEY = 'Rating: '
 BECHDEL_SCORE_KEY = 'Bechdel score: '
 IMDB_CAST_KEY = 'IMDB Cast: '
+OSCAR_WINNER_KEY = 'Oscar Best Picture Winner: '
 
 import os
 from character import Character
@@ -21,10 +20,10 @@ class DataLoader(object):
     """
     Loads metadata and data of movie files into Movie objects.
     """
-    def __init__(self, verbose=True):
+    def __init__(self, data_path, verbose=True):
         print('Initializing DataLoader...')
         self.movies = {}
-        data_dir = os.path.join(os.getcwd(), DATA_PATH)
+        data_dir = os.path.join(os.getcwd(), data_path)
 
         for filename in os.listdir(data_dir):
             if filename.endswith('.txt'):
@@ -44,13 +43,14 @@ class DataLoader(object):
                     bechdel_score = _read_field(lines[6], cast_fn=int)
                     imdb_cast_list = _read_field(lines[7], split=True)
                     imdb_cast = _process_imdb_cast(imdb_cast_list)
+                    oscar_winner = _process_oscar_winner(lines[8])
                     characters = _extract_characters(lines[9:])
 
                 # Create movie object and save.
                 self.movies[title] = Movie(imdb, title, year,
                                            genre, director, rating,
                                            bechdel_score, imdb_cast,
-                                           characters)
+                                           oscar_winner, characters)
         print('All data loaded!')
         print('----------------------------')
 
@@ -66,7 +66,7 @@ def _read_field(line, cast_fn = None, split = False):
     Helper function to handle retrieve field value from the text file.
     """
     field = line.split(': ', 1)[1].rstrip() # Read in the field.
-    if field == 'None':
+    if field == 'None' or field == 'N/A':
         return None
     elif split == True:
         return field.split(', ')
@@ -121,6 +121,15 @@ def _process_imdb_cast(imdb_cast_list):
         return imdb_cast
     else:
         return None
+
+def _process_oscar_winner(line):
+    if OSCAR_WINNER_KEY in line:
+        oscar_winner_bool = _read_field(line)
+        if oscar_winner_bool == 'True':
+            return 1
+        else:
+            return 0
+    return -1
 
 # From stackoverflow: https://bit.ly/2Cznq8R
 def __change_key(dict, old, new):
