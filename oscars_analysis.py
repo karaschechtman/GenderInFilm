@@ -127,14 +127,14 @@ def make_gender_breakdown_bar_viz(global_f_ct, global_m_ct, per_category, cat_na
     offset = bar_width/2
     x = np.arange(len(labels))
     plt.ylabel('Percentage of cast')
-    plt.bar(x-offset, height=female_props, width=bar_width, color='lightcoral')
+    plt.bar(x-offset, height=female_props, width=bar_width, color='#599190')
     plt.bar(x, height=female_props, width=0, tick_label=labels)
-    plt.bar(x+offset, height=male_props, width=bar_width, color='lightskyblue')
+    plt.bar(x+offset, height=male_props, width=bar_width, color='#bb751b')
     global_f_prop, global_m_prop = counts_to_proportions((global_f_ct, global_m_ct))
     step = .2 if len(labels) > 5 else .1
     x_line = np.arange(0-bar_width, len(labels)-bar_width, step=step)
-    plt.plot(x_line, [global_f_prop]*len(x_line), 'r.')
-    plt.plot(x_line, [global_m_prop]*len(x_line), 'b.')
+    plt.plot(x_line, [global_f_prop]*len(x_line), color='#599190', marker='.')
+    plt.plot(x_line, [global_m_prop]*len(x_line), color='#bb751b', marker='.')
     plt.title('Distribution of Genders in Cast\nPer ' + VALID_CATEGORIES[cat_name], fontdict={'family':'serif', 'size':14})
     plt.show()
 
@@ -147,7 +147,7 @@ def make_gender_breakdown_pie_viz(group, female_ct, male_ct):
     plt.axis('equal')
     labels = ['Female', 'Male']
     sizes = [female_ct, male_ct]
-    colors = ['lightcoral', 'lightskyblue']
+    colors = ['#599190', '#bb751b']
     explode = (0, 0.01)
     patches, texts, autotexts = plt.pie(sizes, explode=explode, labels=labels, colors=colors, autopct='%1.1f%%')
     for text in texts:
@@ -174,4 +174,3 @@ if __name__ == "__main__":
     # f_ct, m_ct, _ = compute_cast_gender_breakdown(dl, category=None)
     # print('Global stats:', format_gender_breakdown(corpus_size, f_ct, m_ct))
     # make_gender_breakdown_pie_viz('in Cast', f_ct, m_ct)
-

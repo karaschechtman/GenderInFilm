@@ -1,6 +1,7 @@
 __author__ = 'Kara Schechtman <kws2121@columbia.edu>, Serina Chang <sc3003@columbia.edu>'
 __date__ = 'Jan 15, 2019'
 
+DATA_PATH = './data/movies/'
 IMDB_KEY = 'IMDB: '
 TITLE_KEY = 'Title: '
 YEAR_KEY = 'Year: '
@@ -20,7 +21,7 @@ class DataLoader(object):
     """
     Loads metadata and data of movie files into Movie objects.
     """
-    def __init__(self, data_path, verbose=True):
+    def __init__(self, data_path=DATA_PATH, verbose=True):
         print('Initializing DataLoader...')
         self.movies = {}
         data_dir = os.path.join(os.getcwd(), data_path)
