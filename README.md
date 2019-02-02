@@ -2,19 +2,21 @@
 Python scripts for analyzing data about gender in film. Data from Agarwal et. al (2015) and the Internet Movie Database (IMDb). Bechdel scores are from bechdeltest.com. For NYCDH 2019 conference workshop.
 
 # Files
-## ./
-- `workshop.py`: where to write the exercises for this workshop
-- `data_loader.py`: contains DataLoader object to load information about movies from data/to memory as Movie objects.
-- `movie.py`: Object storing information about a particular movie.
-- `character.py`: Object storing information about a particular character.
-- `imdb_matching.py:` Handles matching characters to IMDB gender data.
-- `ssa_matching.py:` Handles matching characters to SSA data.
-- `coverage_tests.py:` Tests the coverage of the matching functions over the entire dataset.
-- `accuracy_tests.py:` Tests the accuracy of the matching functions on a subset of hand-labeled data.
+## Relevant for the workshop!
+- `./workshop.py`: where to write the exercises for this workshop
+- `./data_loader.py`: contains DataLoader object to load information about movies from data/to memory as Movie objects.
+- `./movie.py`: Object storing information about a particular movie.
+- `./character.py`: Object storing information about a particular character.
+- `./predict_gender.py`: Predicts gender of the cast
 
-## ./preprocessing/
-- `agarwal_data_manager.py:` contains AgarwalDataManager object to load data from Agarwal files and write new versions with line counts for characters rather than full scripts.
-- `make_data.py`: extracts metadata from IMDb and Bechdel score from json files; writes them all into text files.
+## Not relevant for the workshop!
+- `./imdb_matching.py:` Handles matching characters to IMDB gender data.
+- `./ssa_matching.py:` Handles matching characters to SSA data.
+- `./coverage_tests.py:` Tests the coverage of the matching functions over the entire dataset.
+- `./accuracy_tests.py:` Tests the accuracy of the matching functions on a subset of hand-labeled data.
+- `./oscars_analysis.py:` Crunches the Oscars number.
+- `./preprocessing/agarwal_data_manager.py:` contains AgarwalDataManager object to load data from Agarwal files and write new versions with line counts for characters rather than full scripts.
+- `./preprocessing/make_data.py`: extracts metadata from IMDb and Bechdel score from json files; writes them all into text files.
 
 
 # Data
