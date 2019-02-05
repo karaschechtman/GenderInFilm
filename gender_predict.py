@@ -1,18 +1,17 @@
-from imdb_matching import predict_gender_imdb
-from ssa_matching import predict_gender_ssa
 from imdb_matching import *
 from ssa_matching import *
+
+SSA_DICT = make_ssa_dict()
 
 def predict_gender(movie):
     """
     Given a movie object, predict the gender of all characters.
     Returns a dictionary matching from character names to genders.
-    If a charater's gender cannot be assigned with 
+    If a charater's gender cannot be assigned with
     confidence, the character name will not appear in the dictionary.
     """
     imdb_pred_dict = predict_gender_imdb(movie, alignment_fn=in_align, assignment_fn=soft_backtrack)
-    ssa_dict = make_ssa_dict()
-    ssa_pred_dict = predict_gender_ssa(ssa_dict, movie, mode='hard', check_decade=True)
+    ssa_pred_dict = predict_gender_ssa(SSA_DICT, movie, mode='hard', check_decade=True)
     pred_dict = _merge_dict(ssa_pred_dict, imdb_pred_dict, True)
     ordered_snames = sorted(list(pred_dict.keys()))
     return pred_dict
