@@ -9,7 +9,10 @@ def assign_genders(data):
     assign the returned genders to the Character objects'
     gender fields.
     """
-    return None # Delete this when you're done.
+    for movie in data.movies.values():
+        character_genders = predict_gender(movie)
+        for character in character_genders:
+            movie.get_character(character).gender = character_genders[character]
 
 def get_top_n_billed_by_gender(data, n):
     """
@@ -22,7 +25,29 @@ def get_top_n_billed_by_gender(data, n):
     If there are no top n billed, the value should be an
     empty list.
     """
-    return {"M":[], "F":[]}
+    top_n_billed = {"M":[], "F":[]}
+    for movie in data.movies.values():
+        just_male, just_female = True, True
+        i = 0
+        imdb_cast = iter(movie.imdb_cast.values())
+        while i < n and (just_male or just_female):
+            i+=1
+            try:
+                char = next(imdb_cast)
+                gender = char[1]
+                if gender=='M':
+                    just_female = False
+                elif gender=='F':
+                    just_male = False
+                else:
+                    just_male, just_female = False, False
+            except StopIteration:
+                just_male, just_female = False, False
+        if just_male:
+            top_n_billed["M"].append(movie.title)
+        if just_female:
+            top_n_billed["F"].append(movie.title)
+    return top_n_billed
 
 def _print_gender_counts(data):
     """
@@ -45,11 +70,11 @@ def _print_top_n_billed(top_n_billed, n):
     """
     Helper function to print results for exercise 2.
     """
-    if len(top_n_billed["M"]) == 0:
+    if len(top_n_billed['M']) == 0:
         print("No movies with top %d male billed!" % n)
     else:
         print("Movies with top %d male billed:" % n)
-        for movie in top_n_billed["M"]:
+        for movie in top_n_billed['M']:
             print ("- %s" % movie)
     if len(top_n_billed["F"]) == 0:
         print("No movies with top %d female billed!" % n)
