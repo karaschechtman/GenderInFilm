@@ -1,6 +1,8 @@
 # GenderInFilm
 Python scripts for analyzing data about gender in film. Data from Agarwal et. al (2015) and the Internet Movie Database (IMDb). Bechdel scores are from bechdeltest.com. For NYCDH 2019 conference workshop.
 
+# Presentation
+The presentation for the workshop can be accessed [here](https://docs.google.com/presentation/d/1k3zPtqvZnywOYUoX6S0AS_4bdPv14bQXZo665a2acOA/edit?usp=sharing).
 # Files
 ## Relevant for the workshop!
 - `./workshop.py`: where to write the exercises for this workshop
