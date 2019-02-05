@@ -6,6 +6,7 @@ The presentation for the workshop can be accessed [here](https://docs.google.com
 # Files
 ## Relevant for the workshop!
 - `./workshop.py`: where to write the exercises for this workshop
+- `./workshop_solutions.py`: answers for workshop exercises, if you get stuck
 - `./data_loader.py`: contains DataLoader object to load information about movies from data/to memory as Movie objects.
 - `./movie.py`: Object storing information about a particular movie.
 - `./character.py`: Object storing information about a particular character.
