@@ -66,7 +66,7 @@ if __name__ == "__main__":
     assign_genders(data)
     _print_gender_counts(data)
     print("----------------------------")
-    
+
     print("EXERCISE 2")
     n = 5 # Feel free to change this number.
     top_n_billed = get_top_n_billed_by_gender(data, n)
