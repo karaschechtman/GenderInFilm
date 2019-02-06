@@ -7,6 +7,9 @@ import numpy as np
 
 PATH_TO_OSCARS_CORPUS = './data/oscars/'
 VALID_CATEGORIES = {'year':'Year', 'genre':'Genre', 'dir_gen':'Gender of Director', 'winner':'Oscar Best Picture Results', 'bechdel_pf':'Bechdel P/F', 'bechdel_score':'Bechdel Score'}
+# colors for visualizations
+GEN_TO_COLOR = {'F':'#599190', 'M':'#bb751b'}
+GEN_TO_DARKENED_COLOR = {'F':'#3E6565', 'M':'#8D5C1C'}
 
 def counts_to_proportions(counts):
     """
@@ -68,7 +71,7 @@ def compute_cast_gender_breakdown(dl, category, top_billed_n=1000):
                 if '(M)' in movie.director:  # has at least one male director
                     cats.append('Male Director')
             elif category == 'winner':
-                if movie.oscar_winner:
+                if movie.oscar_winner is not None:
                     if movie.oscar_winner == True:
                         cats.append('Winner')
                     else:
@@ -127,15 +130,14 @@ def make_gender_breakdown_bar_viz(global_f_ct, global_m_ct, per_category, cat_na
     offset = bar_width/2
     x = np.arange(len(labels))
     plt.ylabel('Percentage of cast')
-    plt.bar(x-offset, height=female_props, width=bar_width, color='#599190')
-    plt.bar(x, height=female_props, width=0, tick_label=labels)
-    plt.bar(x+offset, height=male_props, width=bar_width, color='#bb751b')
-    global_f_prop, global_m_prop = counts_to_proportions((global_f_ct, global_m_ct))
-    step = .2 if len(labels) > 5 else .1
-    x_line = np.arange(0-bar_width, len(labels)-bar_width, step=step)
-    plt.plot(x_line, [global_f_prop]*len(x_line), color='#599190', marker='.')
-    plt.plot(x_line, [global_m_prop]*len(x_line), color='#bb751b', marker='.')
     plt.title('Distribution of Genders in Cast\nPer ' + VALID_CATEGORIES[cat_name], fontdict={'family':'serif', 'size':14})
+    global_f_prop, global_m_prop = counts_to_proportions((global_f_ct, global_m_ct))
+    x_line = np.arange(0-bar_width, len(labels)-bar_width, step=bar_width/2)
+    plt.plot(x_line, [global_f_prop]*len(x_line), color=GEN_TO_DARKENED_COLOR['F'], marker='o')#GEN_TO_DARKENED_COLOR['F'], marker='.')
+    plt.plot(x_line, [global_m_prop]*len(x_line), color=GEN_TO_DARKENED_COLOR['M'], marker='o')
+    plt.bar(x-offset, height=female_props, width=bar_width, color=GEN_TO_COLOR['F'])
+    plt.bar(x, height=female_props, width=0, tick_label=labels)
+    plt.bar(x+offset, height=male_props, width=bar_width, color=GEN_TO_COLOR['M'])
     plt.show()
 
 def make_gender_breakdown_pie_viz(group, female_ct, male_ct):
@@ -145,11 +147,10 @@ def make_gender_breakdown_pie_viz(group, female_ct, male_ct):
     """
     plt.title('Distribution of Genders ' + group, fontdict={'family':'serif', 'size':16})
     plt.axis('equal')
-    labels = ['Female', 'Male']
     sizes = [female_ct, male_ct]
-    colors = ['#599190', '#bb751b']
+    colors = [GEN_TO_COLOR['F'], GEN_TO_COLOR['M']]
     explode = (0, 0.01)
-    patches, texts, autotexts = plt.pie(sizes, explode=explode, labels=labels, colors=colors, autopct='%1.1f%%')
+    patches, texts, autotexts = plt.pie(sizes, explode=explode, colors=colors, autopct='%1.1f%%')
     for text in texts:
         text.set_fontsize(12)
         text.set_family('serif')
@@ -159,18 +160,18 @@ if __name__ == "__main__":
     dl = DataLoader(PATH_TO_OSCARS_CORPUS, verbose=False)
     corpus_size = len(dl.movies)
 
-    category = 'winner'
-    female_ct, male_ct, per_cat = compute_cast_gender_breakdown(dl, category=category)
-    print('GLOBAL STATS:', format_gender_breakdown(corpus_size, female_ct, male_ct))
-    sorted_cat_items = sorted(per_cat.items(), key=lambda x:x[0])
-    for cat, (num_movies, f_ct, m_ct) in sorted_cat_items:
-        print('{}: {}'.format(cat, format_gender_breakdown(num_movies, f_ct, m_ct)))
-    make_gender_breakdown_bar_viz(female_ct, male_ct, per_cat, cat_name=category)
+    # category = 'bechdel_score'
+    # female_ct, male_ct, per_cat = compute_cast_gender_breakdown(dl, category=category)
+    # print('GLOBAL STATS:', format_gender_breakdown(corpus_size, female_ct, male_ct))
+    # sorted_cat_items = sorted(per_cat.items(), key=lambda x:x[0])
+    # for cat, (num_movies, f_ct, m_ct) in sorted_cat_items:
+    #     print('{}: {}'.format(cat, format_gender_breakdown(num_movies, f_ct, m_ct)))
+    # make_gender_breakdown_bar_viz(female_ct, male_ct, per_cat, cat_name=category)
 
     # f_ct, m_ct = compute_director_gender_breakdown(dl)
     # print('Director stats:', format_gender_breakdown(corpus_size, f_ct, m_ct))
     # make_gender_breakdown_pie_viz('for Directors', f_ct, m_ct)
 
-    # f_ct, m_ct, _ = compute_cast_gender_breakdown(dl, category=None)
-    # print('Global stats:', format_gender_breakdown(corpus_size, f_ct, m_ct))
-    # make_gender_breakdown_pie_viz('in Cast', f_ct, m_ct)
+    f_ct, m_ct, _ = compute_cast_gender_breakdown(dl, category=None)
+    print('Global stats:', format_gender_breakdown(corpus_size, f_ct, m_ct))
+    make_gender_breakdown_pie_viz('in Cast', f_ct, m_ct)
