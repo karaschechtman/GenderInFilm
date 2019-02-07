@@ -13,11 +13,11 @@ The presentation for the workshop can be accessed [here](https://docs.google.com
 - `./predict_gender.py`: Predicts gender of the cast
 
 ## Not relevant for the workshop!
-- `./imdb_matching.py:` Handles matching characters to IMDB gender data.
-- `./ssa_matching.py:` Handles matching characters to SSA data.
-- `./coverage_tests.py:` Tests the coverage of the matching functions over the entire dataset.
+- `./gender/imdb_matching.py:` Handles matching characters to IMDB gender data.
+- `./gender/ssa_matching.py:` Handles matching characters to SSA data.
+- `./gender/coverage_tests.py:` Tests the coverage of the matching functions over the entire dataset.
 - `./accuracy_tests.py:` Tests the accuracy of the matching functions on a subset of hand-labeled data.
-- `./oscars_analysis.py:` Crunches the Oscars number.
+- `./preprocessing/oscars_analysis.py:` Crunches the Oscars number.
 - `./preprocessing/agarwal_data_manager.py:` contains AgarwalDataManager object to load data from Agarwal files and write new versions with line counts for characters rather than full scripts.
 - `./preprocessing/make_data.py`: extracts metadata from IMDb and Bechdel score from json files; writes them all into text files.
 
