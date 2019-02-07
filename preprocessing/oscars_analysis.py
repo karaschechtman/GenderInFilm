@@ -4,6 +4,7 @@ __date__ = 'Feb 01, 2019'
 from data_loader import DataLoader
 import matplotlib.pyplot as plt
 import numpy as np
+sys.path.append('..')
 
 PATH_TO_OSCARS_CORPUS = './data/oscars/'
 VALID_CATEGORIES = {'year':'Year', 'genre':'Genre', 'dir_gen':'Gender of Director', 'winner':'Oscar Best Picture Results', 'bechdel_pf':'Bechdel P/F', 'bechdel_score':'Bechdel Score'}

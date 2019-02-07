@@ -1,12 +1,12 @@
 from data_loader import DataLoader
-from gender_predict import predict_gender
+from predict_gender import get_movie_genders_dict
 
 
 def assign_genders(data_loader):
     """
     INTRODUCTORY EXERCISE
-    For every movie in the DataLoader, call predict_gender and
-    assign the returned genders to the Character objects'
+    For every movie in the DataLoader, call get_movie_genders_dict
+    and assign the returned genders to the Character objects'
     gender fields.
     """
 

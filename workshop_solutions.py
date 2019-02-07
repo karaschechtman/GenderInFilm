@@ -1,5 +1,5 @@
 from data_loader import DataLoader
-from gender_predict import predict_gender
+from predict_gender import get_movie_genders_dict
 
 
 def assign_genders(data_loader):
@@ -10,7 +10,7 @@ def assign_genders(data_loader):
     gender fields.
     """
     for movie in data_loader.movies.values():
-        character_genders = predict_gender(movie)
+        character_genders = get_movie_genders_dict(movie)
         for character in character_genders:
             movie.get_character(character).gender = character_genders[character]
 

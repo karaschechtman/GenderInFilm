@@ -1,9 +1,9 @@
-from imdb_matching import *
-from ssa_matching import *
+from gender.imdb_matching import *
+from gender.ssa_matching import *
 
 SSA_DICT = make_ssa_dict()
 
-def predict_gender(movie):
+def get_movie_genders_dict(movie):
     """
     Given a movie object, predict the gender of all characters.
     Returns a dictionary matching from character names to genders.
